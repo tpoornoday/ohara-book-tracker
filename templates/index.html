@@ -526,7 +526,10 @@
                     body: JSON.stringify({ id, title, authors: authorsArray, cover_url, status })
                 });
 
-                if (!response.ok) throw new Error("Failed to save book");
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Failed to save book");
+                }
                 
                 const result = await response.json();
                 showNotification(result.message || "Book added successfully!", "success");
@@ -535,7 +538,7 @@
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification("Could not add book. Please try again.", "error");
+                showNotification(err.message || "Could not add book. Please try again.", "error");
             }
         }
 
@@ -557,7 +560,10 @@
                     })
                 });
 
-                if (!response.ok) throw new Error("Failed to save book");
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Failed to save book");
+                }
                 
                 const result = await response.json();
                 showNotification(result.message || "Book added successfully!", "success");
@@ -566,7 +572,7 @@
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification("Could not add book. Please try again.", "error");
+                showNotification(err.message || "Could not add book. Please try again.", "error");
             }
         }
 
@@ -590,7 +596,10 @@
                     })
                 });
 
-                if (!response.ok) throw new Error("Failed to toggle status");
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Failed to toggle status");
+                }
                 
                 const label = newStatus === 'read' ? 'Already Read' : 'Want to Read';
                 showNotification(`Moved "${book.title}" to ${label}!`, "success");
@@ -598,7 +607,7 @@
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification("Failed to update status", "error");
+                showNotification(err.message || "Failed to update status", "error");
             }
         }
 
@@ -616,13 +625,16 @@
                     method: 'DELETE'
                 });
 
-                if (!response.ok) throw new Error("Failed to delete book");
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Failed to delete book");
+                }
                 
                 showNotification("Book removed from tracker", "success");
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification("Failed to remove book", "error");
+                showNotification(err.message || "Failed to remove book", "error");
             }
         }
 
