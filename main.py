@@ -135,49 +135,73 @@ class BookUpsert(BaseModel):
 @app.get("/api/search")
 async def search_books(q: str = Query(..., min_length=1)):
     """
-    Proxies to the public Google Books API and parses the response to return
-    clean book information. Rewrites HTTP thumbnail URLs to HTTPS.
-    Handles rate-limiting or network issues gracefully.
+    Proxies to the public Google Books API and parses the response.
+    If Google Books rate-limits or fails, automatically falls back to 
+    the Open Library Search API for high availability.
     """
     google_books_url = "https://www.googleapis.com/books/v1/volumes"
     
     async with httpx.AsyncClient() as client:
+        # Try Google Books first
         try:
-            response = await client.get(google_books_url, params={"q": q, "maxResults": 8}, timeout=6.0)
-            if response.status_code == 429:
-                # Handle rate limiting gracefully
-                raise HTTPException(
-                    status_code=429, 
-                    detail="Google Books API is currently rate-limiting search requests. Please try again later or add custom book IDs."
-                )
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=f"Google Books API error: {e.response.text}")
+            response = await client.get(google_books_url, params={"q": q, "maxResults": 8}, timeout=5.0)
+            if response.status_code == 200:
+                data = response.json()
+                results = []
+                for item in data.get("items", []):
+                    volume_info = item.get("volumeInfo", {})
+                    book_id = item.get("id")
+                    title = volume_info.get("title", "Unknown Title")
+                    authors = volume_info.get("authors", [])
+                    
+                    image_links = volume_info.get("imageLinks", {})
+                    cover_url = image_links.get("thumbnail") or image_links.get("smallThumbnail") or ""
+                    if cover_url and cover_url.startswith("http://"):
+                        cover_url = cover_url.replace("http://", "https://", 1)
+                        
+                    results.append({
+                        "id": book_id,
+                        "title": title,
+                        "authors": authors,
+                        "cover_url": cover_url
+                    })
+                return results
+            else:
+                print(f"Google Books API returned status {response.status_code}. Falling back to Open Library.")
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Unexpected error calling search API: {str(e)}")
-
-        data = response.json()
-        results = []
-        for item in data.get("items", []):
-            volume_info = item.get("volumeInfo", {})
-            book_id = item.get("id")
-            title = volume_info.get("title", "Unknown Title")
-            authors = volume_info.get("authors", [])
+            print(f"Google Books search failed: {str(e)}. Falling back to Open Library.")
             
-            # Extract thumbnail and guarantee HTTPS to prevent mixed content issues
-            image_links = volume_info.get("imageLinks", {})
-            cover_url = image_links.get("thumbnail") or image_links.get("smallThumbnail") or ""
-            if cover_url and cover_url.startswith("http://"):
-                cover_url = cover_url.replace("http://", "https://", 1)
+        # Fallback: Open Library Search API
+        try:
+            open_library_url = "https://openlibrary.org/search.json"
+            response = await client.get(open_library_url, params={"q": q, "limit": 8}, timeout=6.0)
+            response.raise_for_status()
+            data = response.json()
+            
+            results = []
+            for doc in data.get("docs", []):
+                book_key = doc.get("key", "")
+                book_id = book_key.split("/")[-1] if "/" in book_key else book_key or f"ol-{doc.get('cover_i', 'custom')}"
                 
-            results.append({
-                "id": book_id,
-                "title": title,
-                "authors": authors,
-                "cover_url": cover_url
-            })
-            
-        return results
+                title = doc.get("title", "Unknown Title")
+                authors = doc.get("author_name", [])
+                
+                # Construct cover image URL from Open Library cover ID
+                cover_i = doc.get("cover_i")
+                cover_url = f"https://covers.openlibrary.org/b/id/{cover_i}-M.jpg" if cover_i else ""
+                
+                results.append({
+                    "id": book_id,
+                    "title": title,
+                    "authors": authors,
+                    "cover_url": cover_url
+                })
+            return results
+        except Exception as ol_err:
+            raise HTTPException(
+                status_code=502,
+                detail=f"Both book search engines failed. Google rate limited, and Open Library failed with: {str(ol_err)}"
+            )
 
 # API Endpoint 2: GET /api/books
 @app.get("/api/books")
