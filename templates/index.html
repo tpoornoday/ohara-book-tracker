@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohara</title>
+    <!-- Modern Tailwind CSS v3 via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        // Configure Tailwind custom values
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c084fc',
+                            400: '#a855f7',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#0b0f19',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling for a premium look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        
+        /* Ambient glow animation */
+        @keyframes float {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+        .ambient-glow {
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: float 8s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-brand-950 text-slate-100 min-h-screen relative overflow-x-hidden selection:bg-brand-500 selection:text-white">
+
+    <!-- Background decorative ambient glows -->
+    <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-brand-500 ambient-glow pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500 ambient-glow pointer-events-none"></div>
+
+    <div class="max-w-6xl mx-auto px-4 py-6 md:py-8 relative z-10 flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 pb-6 border-b border-slate-800/80 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-tr from-brand-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-book-bookmark text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-200 to-brand-300 bg-clip-text text-transparent">Ohara</h1>
+                    <p class="text-xs text-slate-400 font-medium tracking-wider uppercase">Personal Book Tracker</p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats (Hidden on narrow mobile in header, moved to tabs) -->
+            <div class="hidden sm:flex gap-4">
+                <div class="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex items-center gap-3">
+                    <span class="w-2.5 h-2.5 rounded-full bg-brand-400"></span>
+                    <span class="text-xs text-slate-400 font-medium">To Read: <strong id="stat-to-read" class="text-slate-200 text-sm ml-1">0</strong></span>
+                </div>
+                <div class="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex items-center gap-3">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                    <span class="text-xs text-slate-400 font-medium">Already Read: <strong id="stat-read" class="text-slate-200 text-sm ml-1">0</strong></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar Section -->
+        <section class="max-w-2xl mx-auto w-full mb-8 relative">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400" id="search-icon"></i>
+                    <!-- Spinner for loading search -->
+                    <div id="search-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-brand-500 border-t-transparent"></div>
+                </div>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search by title, author, or ISBN..." 
+                    class="w-full pl-11 pr-10 py-3.5 bg-slate-900/70 border border-slate-800 hover:border-slate-700/80 focus:border-brand-500 rounded-2xl text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all backdrop-blur-md shadow-inner text-sm"
+                    autocomplete="off"
+                >
+                <div class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                    <button id="clear-search-btn" class="hidden text-slate-400 hover:text-slate-200 focus:outline-none">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Autocomplete Results Dropdown -->
+            <div 
+                id="search-dropdown" 
+                class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-slate-800/90 rounded-2xl shadow-2xl shadow-black/80 backdrop-blur-lg z-50 max-h-[420px] overflow-y-auto divide-y divide-slate-800/60 transition-all duration-200"
+            >
+                <!-- Dynamic search items go here -->
+            </div>
+        </section>
+
+        <!-- Toggle Button for Custom Book Form -->
+        <div class="text-center mb-8 -mt-4">
+            <button onclick="toggleManualForm()" class="text-[11px] sm:text-xs text-brand-300 hover:text-brand-200 transition-colors font-medium inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 rounded-xl backdrop-blur-sm active:scale-95 transition-all">
+                <i class="fa-solid fa-circle-plus text-brand-400"></i> Can't find your book? Add it manually
+            </button>
+        </div>
+
+        <!-- Custom Manual Book Entry Form -->
+        <div id="manual-book-form" class="hidden max-w-2xl mx-auto mb-8 p-6 bg-slate-900/70 border border-slate-800/90 rounded-3xl backdrop-blur-md shadow-2xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800/60">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-brand-400"></i> Add Custom Book
+                </h3>
+                <button onclick="toggleManualForm()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Book Title *</label>
+                    <input type="text" id="manual-title" placeholder="e.g. The Hobbit" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all animate-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Authors (comma-separated)</label>
+                    <input type="text" id="manual-authors" placeholder="e.g. J.R.R. Tolkien, Christopher Tolkien" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all animate-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Cover Image URL (optional)</label>
+                    <input type="text" id="manual-cover" placeholder="e.g. https://example.com/cover.jpg" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all animate-none">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="submitManualBook('to_read')" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-900/20 active:scale-95 flex items-center justify-center gap-1.5">
+                        <span>🎯</span> Wishlist
+                    </button>
+                    <button onclick="submitManualBook('read')" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-cyan-900/20 active:scale-95 flex items-center justify-center gap-1.5">
+                        <span>✅</span> Read
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Tab Navigation Bar (Visible only on mobile/tablet screens < 1024px) -->
+        <div class="lg:hidden flex p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl mb-6 backdrop-blur-md sticky top-2 z-40 shadow-lg shadow-black/40">
+            <button 
+                id="tab-btn-to_read" 
+                onclick="setActiveTab('to_read')"
+                class="flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-brand-300 bg-brand-500/10 border border-brand-500/20"
+            >
+                <span>🎯</span> To Read (<span id="mobile-count-to-read">0</span>)
+            </button>
+            <button 
+                id="tab-btn-read" 
+                onclick="setActiveTab('read')"
+                class="flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent"
+            >
+                <span>✅</span> Already Read (<span id="mobile-count-read">0</span>)
+            </button>
+        </div>
+
+        <!-- Dashboard / Book Lists Grid -->
+        <main id="dashboard-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 flex-grow">
+            
+            <!-- Column 1: Want to Read -->
+            <section class="flex flex-col">
+                <div class="hidden lg:flex items-center justify-between mb-4 px-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center border border-brand-500/20">
+                            <span class="text-base">🎯</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-200">Want to Read</h2>
+                    </div>
+                    <span id="count-to-read" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/20">0 books</span>
+                </div>
+                
+                <div 
+                    id="list-to-read" 
+                    class="flex-grow bg-slate-900/30 border border-slate-900 rounded-3xl p-4 sm:p-6 min-h-[360px] lg:min-h-[400px] flex flex-col gap-4 backdrop-blur-sm"
+                >
+                    <!-- Loading or empty state -->
+                    <div class="flex-grow flex flex-col items-center justify-center text-center text-slate-500 py-12 empty-state">
+                        <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
+                            <i class="fa-regular fa-bookmark text-2xl text-slate-600"></i>
+                        </div>
+                        <p class="font-medium text-slate-400">Your wishlist is empty</p>
+                        <p class="text-xs text-slate-500 mt-1 max-w-[240px]">Search for books above and add them to your tracking list.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Column 2: Already Read -->
+            <section class="flex flex-col">
+                <div class="hidden lg:flex items-center justify-between mb-4 px-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                            <span class="text-base">✅</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-200">Already Read</h2>
+                    </div>
+                    <span id="count-read" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">0 books</span>
+                </div>
+                
+                <div 
+                    id="list-read" 
+                    class="flex-grow bg-slate-900/30 border border-slate-900 rounded-3xl p-4 sm:p-6 min-h-[360px] lg:min-h-[400px] flex flex-col gap-4 backdrop-blur-sm"
+                >
+                    <!-- Loading or empty state -->
+                    <div class="flex-grow flex flex-col items-center justify-center text-center text-slate-500 py-12 empty-state">
+                        <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
+                            <i class="fa-regular fa-circle-check text-2xl text-slate-600"></i>
+                        </div>
+                        <p class="font-medium text-slate-400">No read books yet</p>
+                        <p class="text-xs text-slate-500 mt-1 max-w-[240px]">Once you finish a book, toggle its status to show it off here.</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 md:mt-16 pt-6 border-t border-slate-900 text-center text-[10px] sm:text-xs text-slate-500">
+            <p>Ohara App &bull; Powered by FastAPI & Google Books API</p>
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 left-5 sm:left-auto transform translate-y-10 opacity-0 bg-slate-900 border border-brand-500/30 text-slate-200 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 z-50 flex items-center gap-2 text-xs">
+        <i class="fa-solid fa-circle-info text-brand-400" id="toast-icon"></i>
+        <span id="toast-message">Message here</span>
+    </div>
+
+    <!-- Edit Book Modal (Hidden by default) -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative transform scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800/60">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                    <i class="fa-regular fa-pen-to-square text-brand-400"></i> Edit Book Details
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-500 hover:text-slate-300 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <input type="hidden" id="edit-book-id">
+            <input type="hidden" id="edit-book-status">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Book Title *</label>
+                    <input type="text" id="edit-title" placeholder="Book Title" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Authors (comma-separated)</label>
+                    <input type="text" id="edit-authors" placeholder="Authors" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Cover Image URL (optional)</label>
+                    <input type="text" id="edit-cover" placeholder="Cover URL" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all">
+                </div>
+                
+                <div class="flex gap-3 pt-4 border-t border-slate-800/60 mt-6">
+                    <button onclick="closeEditModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all active:scale-95">
+                        Cancel
+                    </button>
+                    <button onclick="saveEditBook()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-900/20 active:scale-95">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript logic -->
+    <script>
+        // Main Application State
+        const state = {
+            savedBooks: [],
+            isSearching: false,
+            debounceTimeout: null,
+            activeTab: 'to_read' // 'to_read' or 'read'
+        };
+
+        // DOM Element Cache
+        const searchInput = document.getElementById('search-input');
+        const searchDropdown = document.getElementById('search-dropdown');
+        const searchIcon = document.getElementById('search-icon');
+        const searchSpinner = document.getElementById('search-spinner');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        
+        const listToRead = document.getElementById('list-to-read');
+        const listRead = document.getElementById('list-read');
+        
+        const countToRead = document.getElementById('count-to-read');
+        const countRead = document.getElementById('count-read');
+        const statToRead = document.getElementById('stat-to-read');
+        const statRead = document.getElementById('stat-read');
+
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-message');
+        const toastIcon = document.getElementById('toast-icon');
+
+        // Toast Helper
+        function showNotification(message, type = 'info') {
+            toastMsg.innerText = message;
+            if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+                toast.className = toast.className.replace(/border-[a-z0-9-/]+/g, '') + " border-emerald-500/40";
+            } else if (type === 'error') {
+                toastIcon.className = "fa-solid fa-circle-xmark text-rose-400";
+                toast.className = toast.className.replace(/border-[a-z0-9-/]+/g, '') + " border-rose-500/40";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-info text-brand-400";
+                toast.className = toast.className.replace(/border-[a-z0-9-/]+/g, '') + " border-brand-500/40";
+            }
+
+            // Slide up & fade in
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+            }, 3000);
+        }
+
+        // Fetch saved books from server
+        async function fetchSavedBooks() {
+            try {
+                const response = await fetch('/api/books');
+                if (!response.ok) throw new Error("Could not fetch books");
+                state.savedBooks = await response.json();
+                renderDashboard();
+            } catch (err) {
+                console.error(err);
+                showNotification("Failed to load your dashboard books", "error");
+            }
+        }
+
+        // Helper: escape quotes or HTML to prevent injection
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Mobile active tab logic
+        function setActiveTab(tab) {
+            state.activeTab = tab;
+            
+            const btnToRead = document.getElementById('tab-btn-to_read');
+            const btnRead = document.getElementById('tab-btn-read');
+            
+            if (tab === 'to_read') {
+                btnToRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-brand-300 bg-brand-500/10 border border-brand-500/20";
+                btnRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent";
+            } else {
+                btnRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-cyan-300 bg-cyan-500/10 border border-cyan-500/20";
+                btnToRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent";
+            }
+
+            syncMobileTabVisibility();
+        }
+
+        function syncMobileTabVisibility() {
+            const containerToRead = listToRead.parentElement;
+            const containerRead = listRead.parentElement;
+
+            // Tailor columns visibility for screens < 1024px
+            if (window.innerWidth < 1024) {
+                if (state.activeTab === 'to_read') {
+                    containerToRead.style.display = 'flex';
+                    containerRead.style.display = 'none';
+                } else {
+                    containerRead.style.display = 'flex';
+                    containerToRead.style.display = 'none';
+                }
+            } else {
+                // Restore desktop view layouts
+                containerToRead.style.display = 'flex';
+                containerRead.style.display = 'flex';
+            }
+        }
+
+        // Render dashboard lists based on current state
+        function renderDashboard() {
+            const toReadBooks = state.savedBooks.filter(b => b.status === 'to_read');
+            const readBooks = state.savedBooks.filter(b => b.status === 'read');
+
+            // Update stats & counts
+            const trCountText = `${toReadBooks.length} book${toReadBooks.length !== 1 ? 's' : ''}`;
+            const rCountText = `${readBooks.length} book${readBooks.length !== 1 ? 's' : ''}`;
+            
+            countToRead.innerText = trCountText;
+            countRead.innerText = rCountText;
+            statToRead.innerText = toReadBooks.length;
+            statRead.innerText = readBooks.length;
+
+            // Sync Mobile Counters
+            document.getElementById('mobile-count-to-read').innerText = toReadBooks.length;
+            document.getElementById('mobile-count-read').innerText = readBooks.length;
+
+            // Render columns
+            renderColumn(listToRead, toReadBooks, 'to_read');
+            renderColumn(listRead, readBooks, 'read');
+
+            // Set current active mobile view columns
+            syncMobileTabVisibility();
+        }
+
+        // Render helper for single list column
+        function renderColumn(container, books, status) {
+            const emptyState = container.querySelector('.empty-state');
+            
+            // Clear existing book cards
+            const cards = container.querySelectorAll('.book-card');
+            cards.forEach(card => card.remove());
+
+            if (books.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+
+            books.forEach(book => {
+                const card = document.createElement('div');
+                card.className = "book-card flex items-start gap-4 p-4 bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800/80 hover:border-slate-700/60 rounded-2xl transition-all duration-300 shadow-md group";
+                
+                const coverImage = book.cover_url 
+                    ? `<img src="${escapeHtml(book.cover_url)}" alt="${escapeHtml(book.title)} cover" class="w-16 h-24 object-cover rounded-lg shadow-md group-hover:scale-[1.03] transition-transform duration-300 bg-slate-800 flex-shrink-0">`
+                    : `<div class="w-16 h-24 rounded-lg bg-slate-800/60 border border-slate-700 flex flex-col items-center justify-center text-slate-500 shadow-md flex-shrink-0"><i class="fa-solid fa-book text-xl"></i><span class="text-[9px] mt-1 font-semibold uppercase">No Cover</span></div>`;
+
+                const authors = book.authors && book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author';
+                
+                card.innerHTML = `
+                    <div class="flex-shrink-0">
+                        ${coverImage}
+                    </div>
+                    <div class="flex-grow min-w-0 flex flex-col justify-between h-24">
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-bold text-slate-100 truncate pr-1" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</h3>
+                            <p class="text-xs text-slate-400 mt-1 truncate" title="${escapeHtml(authors)}">${escapeHtml(authors)}</p>
+                        </div>
+                        <div class="flex items-center gap-2 mt-auto">
+                            <!-- Toggle Button -->
+                            <button 
+                                onclick="toggleBookStatus('${escapeHtml(book.id)}')"
+                                class="flex items-center gap-1.5 px-3 py-1.8 py-2 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 ${
+                                    status === 'to_read' 
+                                    ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20' 
+                                    : 'bg-brand-500/10 text-brand-300 hover:bg-brand-500/20 border border-brand-500/20'
+                                }"
+                                title="${status === 'to_read' ? 'Mark as Read' : 'Move back to Wishlist'}"
+                            >
+                                ${status === 'to_read' ? '<i class="fa-solid fa-check text-[10px]"></i> Done' : '<i class="fa-solid fa-rotate-left text-[10px]"></i> Wishlist'}
+                            </button>
+                            <!-- Edit Button -->
+                            <button 
+                                onclick="openEditModal('${escapeHtml(book.id)}')"
+                                class="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-brand-300 hover:bg-brand-500/10 border border-slate-800 hover:border-brand-500/20 transition-all duration-200 active:scale-95"
+                                title="Edit book details"
+                            >
+                                <i class="fa-regular fa-pen-to-square text-xs"></i>
+                            </button>
+                            <!-- Delete Button -->
+                            <button 
+                                onclick="deleteBook('${escapeHtml(book.id)}')"
+                                class="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/20 transition-all duration-200 active:scale-95"
+                                title="Remove book"
+                            >
+                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Add book (POST API)
+        async function saveBook(id, title, authors, cover_url, status) {
+            try {
+                let authorsArray = [];
+                try {
+                    authorsArray = JSON.parse(authors);
+                } catch(e) {
+                    authorsArray = authors ? authors.split(',').map(a => a.trim()) : [];
+                }
+
+                const response = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, title, authors: authorsArray, cover_url, status })
+                });
+
+                if (!response.ok) throw new Error("Failed to save book");
+                
+                const result = await response.json();
+                showNotification(result.message || "Book added successfully!", "success");
+                
+                clearSearch();
+                await fetchSavedBooks();
+            } catch (err) {
+                console.error(err);
+                showNotification("Could not add book. Please try again.", "error");
+            }
+        }
+
+        // Toggle Book status (Move read <-> to_read)
+        async function toggleBookStatus(id) {
+            const book = state.savedBooks.find(b => b.id === id);
+            if (!book) return;
+
+            const newStatus = book.status === 'to_read' ? 'read' : 'to_read';
+            
+            try {
+                const response = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: book.id,
+                        title: book.title,
+                        authors: book.authors,
+                        cover_url: book.cover_url,
+                        status: newStatus
+                    })
+                });
+
+                if (!response.ok) throw new Error("Failed to toggle status");
+                
+                const label = newStatus === 'read' ? 'Already Read' : 'Want to Read';
+                showNotification(`Moved "${book.title}" to ${label}!`, "success");
+                
+                await fetchSavedBooks();
+            } catch (err) {
+                console.error(err);
+                showNotification("Failed to update status", "error");
+            }
+        }
+
+        // Delete book (DELETE API)
+        async function deleteBook(id) {
+            const book = state.savedBooks.find(b => b.id === id);
+            const title = book ? `"${book.title}"` : 'Book';
+            
+            if (!confirm(`Are you sure you want to remove ${title} from your list?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/books/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error("Failed to delete book");
+                
+                showNotification("Book removed from tracker", "success");
+                await fetchSavedBooks();
+            } catch (err) {
+                console.error(err);
+                showNotification("Failed to remove book", "error");
+            }
+        }
+
+        // Open edit book modal
+        function openEditModal(id) {
+            const book = state.savedBooks.find(b => b.id === id);
+            if (!book) return;
+            
+            document.getElementById('edit-book-id').value = book.id;
+            document.getElementById('edit-book-status').value = book.status;
+            document.getElementById('edit-title').value = book.title;
+            document.getElementById('edit-authors').value = book.authors.join(', ');
+            document.getElementById('edit-cover').value = book.cover_url || '';
+            
+            const modal = document.getElementById('edit-modal');
+            modal.classList.remove('hidden');
+            // Animate scale in
+            setTimeout(() => {
+                modal.querySelector('.transform').classList.remove('scale-95');
+                modal.querySelector('.transform').classList.add('scale-100');
+            }, 10);
+        }
+
+        // Close edit book modal
+        function closeEditModal() {
+            const modal = document.getElementById('edit-modal');
+            modal.querySelector('.transform').classList.remove('scale-100');
+            modal.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+
+        // Save book details edits
+        async function saveEditBook() {
+            const id = document.getElementById('edit-book-id').value;
+            const status = document.getElementById('edit-book-status').value;
+            const titleInput = document.getElementById('edit-title');
+            const authorsInput = document.getElementById('edit-authors');
+            const coverInput = document.getElementById('edit-cover');
+            
+            const title = titleInput.value.trim();
+            if (!title) {
+                showNotification("Book Title is required!", "error");
+                return;
+            }
+            
+            const authorsRaw = authorsInput.value.trim();
+            const authorsList = authorsRaw ? authorsRaw.split(',').map(a => a.trim()) : [];
+            const coverUrl = coverInput.value.trim();
+            
+            try {
+                const response = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, title, authors: authorsList, cover_url: coverUrl, status })
+                });
+
+                if (!response.ok) throw new Error("Failed to save book changes");
+                
+                showNotification("Book changes saved successfully!", "success");
+                closeEditModal();
+                await fetchSavedBooks();
+            } catch (err) {
+                console.error(err);
+                showNotification("Could not save changes.", "error");
+            }
+        }
+
+        // Debounced Search Handler
+        function handleSearchInput(e) {
+            const query = e.target.value.trim();
+            
+            if (query.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+
+            clearTimeout(state.debounceTimeout);
+
+            if (query.length < 2) {
+                hideDropdown();
+                return;
+            }
+
+            searchIcon.classList.add('hidden');
+            searchSpinner.classList.remove('hidden');
+
+            state.debounceTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.detail || "Search request failed");
+                    }
+                    
+                    const results = await response.json();
+                    renderSearchDropdown(results);
+                } catch (err) {
+                    console.error(err);
+                    showNotification(err.message || "Search failed.", "error");
+                } finally {
+                    searchSpinner.classList.add('hidden');
+                    searchIcon.classList.remove('hidden');
+                }
+            }, 350);
+        }
+
+        // Render autocomplete dropdown search list
+        function renderSearchDropdown(results) {
+            searchDropdown.innerHTML = '';
+            
+            if (results.length === 0) {
+                searchDropdown.innerHTML = `
+                    <div class="px-5 py-4 text-center text-slate-500 text-xs font-medium">
+                        No results found for that search.
+                    </div>
+                `;
+                showDropdown();
+                return;
+            }
+
+            results.forEach(book => {
+                const item = document.createElement('div');
+                // Stack vertically on mobile, row on larger devices
+                item.className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 hover:bg-slate-800/50 transition-colors duration-150 group";
+                
+                const coverImage = book.cover_url 
+                    ? `<img src="${escapeHtml(book.cover_url)}" alt="${escapeHtml(book.title)} thumbnail" class="w-10 h-14 object-cover rounded shadow bg-slate-800 flex-shrink-0">`
+                    : `<div class="w-10 h-14 rounded bg-slate-800 border border-slate-700 flex flex-col items-center justify-center text-slate-500 text-[10px] flex-shrink-0"><i class="fa-solid fa-book"></i></div>`;
+
+                const authors = book.authors && book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author';
+                const authorsJson = JSON.stringify(book.authors);
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${coverImage}
+                        <div class="min-w-0">
+                            <h4 class="text-xs font-bold text-slate-200 truncate group-hover:text-brand-300 transition-colors pr-2" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</h4>
+                            <p class="text-[11px] text-slate-400 truncate mt-0.5" title="${escapeHtml(authors)}">${escapeHtml(authors)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 sm:gap-1.5 justify-end mt-1 sm:mt-0 flex-shrink-0">
+                        <button 
+                            onclick="saveBook('${escapeHtml(book.id)}', '${escapeHtml(book.title)}', '${escapeHtml(authorsJson)}', '${escapeHtml(book.cover_url)}', 'to_read')"
+                            class="flex-1 sm:flex-none py-2 px-3 sm:py-1.5 sm:px-2.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-[11px] font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1 shadow-md shadow-brand-900/10 active:scale-95"
+                        >
+                            <span>🎯</span> Wishlist
+                        </button>
+                        <button 
+                            onclick="saveBook('${escapeHtml(book.id)}', '${escapeHtml(book.title)}', '${escapeHtml(authorsJson)}', '${escapeHtml(book.cover_url)}', 'read')"
+                            class="flex-1 sm:flex-none py-2 px-3 sm:py-1.5 sm:px-2.5 bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white text-[11px] font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1 shadow-md shadow-cyan-900/10 active:scale-95"
+                        >
+                            <span>✅</span> Read
+                        </button>
+                    </div>
+                `;
+                searchDropdown.appendChild(item);
+            });
+
+            showDropdown();
+        }
+
+        // Show/hide dropdown animations
+        function showDropdown() {
+            searchDropdown.classList.remove('hidden');
+        }
+
+        function hideDropdown() {
+            setTimeout(() => {
+                searchDropdown.classList.add('hidden');
+            }, 250); // slight delay to allow buttons clicks to trigger
+        }
+
+        // Clear search inputs and results
+        function clearSearch() {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            searchDropdown.innerHTML = '';
+            searchDropdown.classList.add('hidden');
+            searchSpinner.classList.add('hidden');
+            searchIcon.classList.remove('hidden');
+        }
+
+        // Toggle visibility of the manual book entry form
+        function toggleManualForm() {
+            const form = document.getElementById('manual-book-form');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                // Focus title input when opened
+                setTimeout(() => document.getElementById('manual-title').focus(), 100);
+            }
+        }
+
+        // Submit manual book creation
+        async function submitManualBook(status) {
+            const titleInput = document.getElementById('manual-title');
+            const authorsInput = document.getElementById('manual-authors');
+            const coverInput = document.getElementById('manual-cover');
+            
+            const title = titleInput.value.trim();
+            if (!title) {
+                showNotification("Book Title is required!", "error");
+                return;
+            }
+            
+            const authorsRaw = authorsInput.value.trim();
+            const authorsList = authorsRaw ? authorsRaw.split(',').map(a => a.trim()) : [];
+            const coverUrl = coverInput.value.trim();
+            
+            // Generate a unique custom book ID to prevent conflicts with Google Book IDs
+            const customId = 'custom-' + Date.now();
+            
+            await saveBook(customId, title, JSON.stringify(authorsList), coverUrl, status);
+            
+            // Clear inputs and hide form
+            titleInput.value = '';
+            authorsInput.value = '';
+            coverInput.value = '';
+            document.getElementById('manual-book-form').classList.add('hidden');
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            searchInput.addEventListener('input', handleSearchInput);
+            
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                    searchDropdown.classList.add('hidden');
+                }
+            });
+
+            // Focus input shows dropdown if it has items
+            searchInput.addEventListener('focus', () => {
+                if (searchDropdown.children.length > 0) {
+                    showDropdown();
+                }
+            });
+
+            clearSearchBtn.addEventListener('click', clearSearch);
+            
+            // Responsive mobile tabs sync on window resize
+            window.addEventListener('resize', syncMobileTabVisibility);
+        }
+
+        // App Entry Point
+        window.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            fetchSavedBooks();
+        });
+    </script>
+</body>
+</html>
