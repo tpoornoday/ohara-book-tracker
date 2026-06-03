@@ -539,6 +539,37 @@
             }
         }
 
+        // Save book by its index in the search results cache
+        async function saveBookByIndex(index, status) {
+            const book = state.searchResults[index];
+            if (!book) return;
+            
+            try {
+                const response = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: book.id,
+                        title: book.title,
+                        authors: book.authors,
+                        cover_url: book.cover_url,
+                        status: status
+                    })
+                });
+
+                if (!response.ok) throw new Error("Failed to save book");
+                
+                const result = await response.json();
+                showNotification(result.message || "Book added successfully!", "success");
+                
+                clearSearch();
+                await fetchSavedBooks();
+            } catch (err) {
+                console.error(err);
+                showNotification("Could not add book. Please try again.", "error");
+            }
+        }
+
         // Toggle Book status (Move read <-> to_read)
         async function toggleBookStatus(id) {
             const book = state.savedBooks.find(b => b.id === id);
@@ -704,6 +735,7 @@
         // Render autocomplete dropdown search list
         function renderSearchDropdown(results) {
             searchDropdown.innerHTML = '';
+            state.searchResults = results; // cache results in state
             
             if (results.length === 0) {
                 searchDropdown.innerHTML = `
@@ -715,7 +747,7 @@
                 return;
             }
 
-            results.forEach(book => {
+            results.forEach((book, index) => {
                 const item = document.createElement('div');
                 // Stack vertically on mobile, row on larger devices
                 item.className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 hover:bg-slate-800/50 transition-colors duration-150 group";
@@ -725,7 +757,6 @@
                     : `<div class="w-10 h-14 rounded bg-slate-800 border border-slate-700 flex flex-col items-center justify-center text-slate-500 text-[10px] flex-shrink-0"><i class="fa-solid fa-book"></i></div>`;
 
                 const authors = book.authors && book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author';
-                const authorsJson = JSON.stringify(book.authors);
                 
                 item.innerHTML = `
                     <div class="flex items-center gap-3 min-w-0">
@@ -737,13 +768,13 @@
                     </div>
                     <div class="flex items-center gap-2 sm:gap-1.5 justify-end mt-1 sm:mt-0 flex-shrink-0">
                         <button 
-                            onclick="saveBook('${escapeHtml(book.id)}', '${escapeHtml(book.title)}', '${escapeHtml(authorsJson)}', '${escapeHtml(book.cover_url)}', 'to_read')"
+                            onclick="saveBookByIndex(${index}, 'to_read')"
                             class="flex-1 sm:flex-none py-2 px-3 sm:py-1.5 sm:px-2.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-[11px] font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1 shadow-md shadow-brand-900/10 active:scale-95"
                         >
                             <span>🎯</span> Wishlist
                         </button>
                         <button 
-                            onclick="saveBook('${escapeHtml(book.id)}', '${escapeHtml(book.title)}', '${escapeHtml(authorsJson)}', '${escapeHtml(book.cover_url)}', 'read')"
+                            onclick="saveBookByIndex(${index}, 'read')"
                             class="flex-1 sm:flex-none py-2 px-3 sm:py-1.5 sm:px-2.5 bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white text-[11px] font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1 shadow-md shadow-cyan-900/10 active:scale-95"
                         >
                             <span>✅</span> Read
