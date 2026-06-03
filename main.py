@@ -117,7 +117,11 @@ def init_db():
 
 @app.on_event("startup")
 def startup_event():
-    init_db()
+    try:
+        init_db()
+        print("Database initialization successful.")
+    except Exception as e:
+        print(f"CRITICAL ERROR during database initialization: {str(e)}")
 
 # Pydantic Schemas for validation
 class BookUpsert(BaseModel):
