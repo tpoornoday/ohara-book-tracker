@@ -3,3 +3,7 @@ uvicorn
 httpx
 jinja2
 pg8000
+passlib[bcrypt]
+itsdangerous
+pydantic
+python-multipart

@@ -3,552 +3,2195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ohara</title>
-    <!-- Modern Tailwind CSS v3 via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Plus Jakarta Sans -->
+    <title>Ohara — Book Tracker</title>
+    <meta name="description" content="Track your reading journey with Ohara — a cozy book tracker">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome for Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' rx='140' fill='%23D1966C'/%3E%3Cpath fill='%2312100E' transform='translate(76 44)' d='M0 96C0 43 43 0 96 0l96 0 0 190.7c0 13.4 15.5 20.9 26 12.5L272 160l54 43.2c10.5 8.4 26 .9 26-12.5L352 0l32 0 32 0c17.7 0 32 14.3 32 32l0 320c0 17.7-14.3 32-32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l-32 0L96 512c-53 0-96-43-96-96L0 96zM64 416c0 17.7 14.3 32 32 32l256 0 0-64L96 384c-17.7 0-32 14.3-32 32z'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        // Configure Tailwind custom values
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
-                            200: '#ddd6fe',
-                            300: '#c084fc',
-                            400: '#a855f7',
-                            500: '#8b5cf6',
-                            600: '#7c3aed',
-                            700: '#6d28d9',
-                            800: '#5b21b6',
-                            900: '#4c1d95',
-                            950: '#0b0f19',
-                        }
-                    }
-                }
+    <style>
+        /* ═══════════════════════════════════════
+           Design System — CSS Custom Properties
+           ═══════════════════════════════════════ */
+        :root {
+            --parchment: #1A1715;
+            --parchment-dark: #12100E;
+            --leather: #B87A4F;
+            --leather-light: #D1966C;
+            --leather-dark: #8A5531;
+            --ink: #E8E2D9;
+            --ink-muted: #B0A89F;
+            --ink-light: #8C847D;
+            --spine-green: #6C8C61;
+            --spine-green-light: #84A678;
+            --bookmark-red: #D47766;
+            --bookmark-red-light: #E89485;
+            --gold-leaf: #D9B859;
+            --gold-leaf-light: #EAD07C;
+            --page-cream: #24201D;
+            --shelf-shadow: rgba(0, 0, 0, 0.4);
+            --danger: #D46655;
+            --danger-bg: rgba(212, 102, 85, 0.15);
+            --success-green: #5A9E5A;
+
+            --font-heading: 'Libre Baskerville', Georgia, serif;
+            --font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
+
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.25rem;
+        }
+
+        /* ═══════════════════════════════════════
+           Reset & Base
+           ═══════════════════════════════════════ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--parchment);
+            color: var(--ink);
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1A1715 0%, #261D17 50%, #12100E 100%);
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            z-index: 0;
+        }
+
+        .bg-artifacts {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .bg-artifacts i {
+            position: absolute;
+            color: rgba(184, 122, 79, 0.05);
+            font-size: 8rem;
+            transform: rotate(-15deg);
+        }
+        .bg-artifacts i:nth-child(even) { transform: rotate(20deg); }
+        .bg-artifacts i:nth-child(3) { transform: rotate(5deg) scale(0.8); }
+        .bg-artifacts i:nth-child(4) { transform: rotate(-25deg) scale(1.2); }
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection {
+            background: rgba(139, 69, 19, 0.15);
+            color: var(--ink);
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--parchment-dark); }
+        ::-webkit-scrollbar-thumb { background: rgba(139,69,19,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139,69,19,0.35); }
+
+        /* ═══════════════════════════════════════
+           Layout
+           ═══════════════════════════════════════ */
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════
+           Header
+           ═══════════════════════════════════════ */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(139,69,19,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--leather), var(--leather-light));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--page-cream);
+            font-size: 1.2rem;
+            box-shadow: 0 3px 10px rgba(139,69,19,0.18);
+        }
+
+        .header-title {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .header-subtitle {
+            font-size: 0.7rem;
+            color: var(--ink-muted);
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.08);
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--ink-muted);
+            box-shadow: 0 1px 3px var(--shelf-shadow);
+        }
+
+        .stat-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .stat-dot.to-read { background: var(--bookmark-red); }
+        .stat-dot.reading { background: var(--spine-green); }
+        .stat-dot.read { background: var(--gold-leaf); }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 0.5rem;
+            padding-left: 0.75rem;
+            border-left: 1px solid rgba(139,69,19,0.1);
+        }
+
+        .user-name {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--ink-muted);
+        }
+
+        .btn-icon {
+            background: none;
+            border: 1.5px solid rgba(139,69,19,0.12);
+            border-radius: var(--radius-sm);
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ink-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .btn-icon:hover {
+            background: rgba(139,69,19,0.06);
+            border-color: rgba(139,69,19,0.2);
+            color: var(--leather);
+        }
+
+        /* ═══════════════════════════════════════
+           Search Section
+           ═══════════════════════════════════════ */
+        .search-section {
+            max-width: 600px;
+            margin: 0 auto 1.75rem;
+            width: 100%;
+            position: relative;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 0;
+            position: relative;
+        }
+
+        .search-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrap i.search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-muted);
+            opacity: 0.4;
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .search-spinner {
+            display: none;
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--leather);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 2.5rem 0.8rem 2.75rem;
+            border: 1.5px solid rgba(139,69,19,0.12);
+            border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+            background: var(--page-cream);
+            color: var(--ink);
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--leather);
+            box-shadow: 0 0 0 3px rgba(139,69,19,0.08);
+        }
+
+        .search-input::placeholder {
+            color: var(--ink-light);
+            opacity: 0.5;
+        }
+
+        .search-clear-btn {
+            display: none;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--ink-muted);
+            opacity: 0.5;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0.2rem;
+        }
+
+        .search-clear-btn:hover {
+            opacity: 0.8;
+        }
+
+        .search-btn {
+            padding: 0.8rem 1.25rem;
+            background: linear-gradient(135deg, var(--leather), var(--leather-light));
+            color: var(--page-cream);
+            border: none;
+            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+            box-shadow: 0 0 10px rgba(209, 150, 108, 0.2);
+        }
+
+        .search-btn:hover {
+            box-shadow: 0 0 18px rgba(209, 150, 108, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .search-hint {
+            text-align: center;
+            font-size: 0.68rem;
+            color: var(--ink-muted);
+            opacity: 0.5;
+            margin-top: 0.5rem;
+        }
+
+        /* Search Dropdown */
+        .search-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.12);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 8px 32px rgba(44,24,16,0.12), 0 2px 8px rgba(44,24,16,0.06);
+            max-height: 440px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .search-dropdown.visible { display: block; }
+
+        .dropdown-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--ink-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid rgba(139,69,19,0.06);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .dropdown-header .query-text {
+            color: var(--leather);
+            font-style: italic;
+            text-transform: none;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(139,69,19,0.04);
+            transition: background 0.15s;
+        }
+
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: rgba(139,69,19,0.03); }
+
+        .dropdown-item-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .dropdown-cover {
+            width: 38px;
+            height: 54px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: var(--parchment-dark);
+            box-shadow: 1px 1px 4px rgba(44,24,16,0.1);
+            flex-shrink: 0;
+        }
+
+        .dropdown-cover-placeholder {
+            width: 38px;
+            height: 54px;
+            border-radius: 4px;
+            background: var(--parchment-dark);
+            border: 1px solid rgba(139,69,19,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ink-muted);
+            opacity: 0.4;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .dropdown-text { min-width: 0; }
+
+        .dropdown-title {
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dropdown-authors {
+            font-size: 0.72rem;
+            color: var(--ink-muted);
+            margin-top: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dropdown-meta {
+            font-size: 0.65rem;
+            color: var(--ink-light);
+            margin-top: 0.2rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .dropdown-actions {
+            display: flex;
+            gap: 0.35rem;
+            flex-shrink: 0;
+        }
+
+        .dropdown-actions button {
+            padding: 0.4rem 0.65rem;
+            border: 1.5px solid;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 0.68rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-add-toread {
+            background: rgba(184,92,78,0.08);
+            border-color: rgba(184,92,78,0.2);
+            color: var(--bookmark-red);
+        }
+        .btn-add-toread:hover { 
+            background: rgba(184,92,78,0.15); 
+            box-shadow: 0 0 10px rgba(184,92,78,0.2);
+        }
+
+        .btn-add-reading {
+            background: rgba(74,103,65,0.08);
+            border-color: rgba(74,103,65,0.2);
+            color: var(--spine-green);
+        }
+        .btn-add-reading:hover { 
+            background: rgba(74,103,65,0.15); 
+            box-shadow: 0 0 10px rgba(74,103,65,0.2);
+        }
+
+        .btn-add-read {
+            background: rgba(200,169,81,0.1);
+            border-color: rgba(200,169,81,0.25);
+            color: #9A8340;
+        }
+        .btn-add-read:hover { 
+            background: rgba(200,169,81,0.2); 
+            box-shadow: 0 0 10px rgba(200,169,81,0.25);
+        }
+
+        .no-results {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--ink-muted);
+        }
+
+        .no-results-icon {
+            font-size: 2rem;
+            opacity: 0.3;
+            margin-bottom: 0.75rem;
+        }
+
+        .no-results h4 {
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .no-results p {
+            font-size: 0.78rem;
+            opacity: 0.7;
+        }
+
+        /* ═══════════════════════════════════════
+           Manual Add Button
+           ═══════════════════════════════════════ */
+        .manual-add-toggle {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .manual-add-toggle button {
+            background: none;
+            border: 1.5px dashed rgba(139,69,19,0.15);
+            border-radius: var(--radius-lg);
+            padding: 0.5rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--leather);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .manual-add-toggle button:hover {
+            background: rgba(139,69,19,0.04);
+            border-color: rgba(139,69,19,0.25);
+        }
+
+        /* Manual Form */
+        .manual-form-wrapper {
+            position: relative;
+            z-index: 50;
+            text-align: center;
+        }
+
+        .manual-form {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 0.5rem;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.1);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+
+        .manual-form.visible { display: block; }
+
+        .manual-form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(139,69,19,0.08);
+        }
+
+        .manual-form-header h3 {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            color: var(--ink);
+        }
+
+        .manual-form-close {
+            background: none;
+            border: none;
+            color: var(--ink-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.2rem;
+        }
+
+        .manual-form .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .manual-form .form-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--ink-muted);
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .manual-form .form-input {
+            width: 100%;
+            padding: 0.6rem 0.85rem;
+            border: 1.5px solid rgba(139,69,19,0.12);
+            border-radius: var(--radius-sm);
+            background: var(--parchment);
+            color: var(--ink);
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .manual-form .form-input:focus {
+            border-color: var(--leather);
+            box-shadow: 0 0 0 3px rgba(139,69,19,0.06);
+        }
+
+        .manual-form-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .manual-form-actions button {
+            flex: 1;
+            padding: 0.65rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-manual-toread {
+            background: var(--bookmark-red);
+            color: white;
+            box-shadow: 0 0 8px rgba(212, 102, 85, 0.3);
+        }
+        .btn-manual-toread:hover { 
+            background: var(--bookmark-red-light); 
+            box-shadow: 0 0 15px rgba(212, 102, 85, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-manual-reading {
+            background: var(--spine-green);
+            color: white;
+            box-shadow: 0 0 8px rgba(108, 140, 97, 0.3);
+        }
+        .btn-manual-reading:hover { 
+            background: var(--spine-green-light); 
+            box-shadow: 0 0 15px rgba(108, 140, 97, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-manual-read {
+            background: var(--gold-leaf);
+            color: var(--ink);
+            box-shadow: 0 0 8px rgba(217, 184, 89, 0.3);
+        }
+        .btn-manual-read:hover { 
+            background: var(--gold-leaf-light); 
+            box-shadow: 0 0 15px rgba(217, 184, 89, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* ═══════════════════════════════════════
+           Mobile Tabs
+           ═══════════════════════════════════════ */
+        .mobile-tabs {
+            display: none;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.08);
+            border-radius: var(--radius-lg);
+            padding: 0.3rem;
+            margin-bottom: 1.25rem;
+            position: sticky;
+            top: 0.5rem;
+            z-index: 50;
+            box-shadow: 0 4px 16px var(--shelf-shadow);
+        }
+
+        @media (max-width: 1023px) {
+            .mobile-tabs { display: flex; }
+        }
+
+        .mobile-tab {
+            flex: 1;
+            padding: 0.6rem 0.5rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: none;
+            font-family: var(--font-body);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--ink-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .mobile-tab.active-toread {
+            background: rgba(184,92,78,0.1);
+            color: var(--bookmark-red);
+        }
+
+        .mobile-tab.active-reading {
+            background: rgba(74,103,65,0.1);
+            color: var(--spine-green);
+        }
+
+        .mobile-tab.active-read {
+            background: rgba(200,169,81,0.12);
+            color: #9A8340;
+        }
+
+        /* ═══════════════════════════════════════
+           Dashboard Grid — 3 Columns
+           ═══════════════════════════════════════ */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.25rem;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 1023px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+
+        .book-column { display: flex; flex-direction: column; }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding: 0 0.25rem;
+        }
+
+        /* Removed display:none for column-header on mobile to keep expand button accessible */
+
+        .column-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .column-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .column-icon.to-read { background: rgba(184,92,78,0.1); }
+        .column-icon.reading { background: rgba(74,103,65,0.1); }
+        .column-icon.read { background: rgba(200,169,81,0.12); }
+
+        .column-title {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        #col-to_read .column-title { color: var(--bookmark-red); }
+        #col-reading .column-title { color: var(--spine-green); }
+        #col-read .column-title { color: #A8914B; /* slightly darker gold for text readability */ }
+
+        .column-count {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2rem;
+        }
+
+        .column-count.to-read { background: rgba(184,92,78,0.08); color: var(--bookmark-red); }
+        .column-count.reading { background: rgba(74,103,65,0.08); color: var(--spine-green); }
+        .column-count.read { background: rgba(200,169,81,0.1); color: #9A8340; }
+
+        .column-body {
+            flex-grow: 1;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.06);
+            border-radius: var(--radius-xl);
+            padding: 1rem;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            box-shadow: 0 2px 12px var(--shelf-shadow);
+            transition: all 0.2s ease;
+        }
+
+        .column-body.drag-over {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 2px dashed var(--leather) !important;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        /* Column Specific Gradients and Borders */
+        #col-to_read .column-body {
+            background: linear-gradient(160deg, var(--page-cream) 0%, rgba(212, 102, 85, 0.05) 100%);
+            border-color: rgba(212, 102, 85, 0.15);
+        }
+        #col-reading .column-body {
+            background: linear-gradient(160deg, var(--page-cream) 0%, rgba(108, 140, 97, 0.05) 100%);
+            border-color: rgba(108, 140, 97, 0.15);
+        }
+        #col-read .column-body {
+            background: linear-gradient(160deg, var(--page-cream) 0%, rgba(217, 184, 89, 0.05) 100%);
+            border-color: rgba(217, 184, 89, 0.15);
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--ink-muted);
+        }
+
+        .empty-state-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--parchment-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h4 {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            opacity: 0.7;
+        }
+
+        .empty-state p {
+            font-size: 0.72rem;
+            max-width: 200px;
+            opacity: 0.5;
+            line-height: 1.4;
+        }
+
+        /* ═══════════════════════════════════════
+           Book Cards
+           ═══════════════════════════════════════ */
+        .book-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 0.85rem;
+            background: var(--parchment);
+            border: 1px solid rgba(139,69,19,0.06);
+            border-radius: var(--radius-lg);
+            transition: all 0.25s ease;
+            position: relative;
+            cursor: grab;
+        }
+
+        .book-card:active {
+            cursor: grabbing;
+        }
+
+        .book-card.dragging {
+            opacity: 0.4;
+            transform: scale(0.95) rotate(2deg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(44,24,16,0.08);
+            border-color: rgba(139,69,19,0.12);
+        }
+
+        .book-cover {
+            width: 72px;
+            height: 108px;
+            border-radius: 4px;
+            object-fit: cover;
+            box-shadow: 2px 2px 8px rgba(44,24,16,0.12);
+            flex-shrink: 0;
+            background: var(--parchment-dark);
+        }
+
+        .book-cover-placeholder {
+            width: 72px;
+            height: 108px;
+            border-radius: 4px;
+            background: var(--parchment-dark);
+            border: 1px solid rgba(139,69,19,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--ink-muted);
+            opacity: 0.4;
+            flex-shrink: 0;
+        }
+
+        .book-cover-placeholder i { font-size: 1.5rem; }
+        .book-cover-placeholder span { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+
+        .book-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 108px;
+        }
+
+        .book-title {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+
+        .book-authors {
+            font-size: 0.8rem;
+            color: var(--ink-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 0.1rem;
+        }
+
+        .book-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: auto;
+        }
+
+        /* Clickable status transition icons */
+        .status-icon-btn {
+            width: 30px;
+            height: 28px;
+            border: 1.5px solid;
+            border-radius: var(--radius-sm);
+            background: none;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .status-icon-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: var(--page-cream);
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+
+        .status-icon-btn:hover::after {
+            opacity: 1;
+        }
+
+        .status-icon-btn.to-toread {
+            border-color: rgba(184,92,78,0.2);
+            color: var(--bookmark-red);
+        }
+        .status-icon-btn.to-toread:hover {
+            background: rgba(184,92,78,0.1);
+        }
+
+        .status-icon-btn.to-reading {
+            border-color: rgba(74,103,65,0.2);
+            color: var(--spine-green);
+        }
+        .status-icon-btn.to-reading:hover {
+            background: rgba(74,103,65,0.1);
+        }
+
+        .status-icon-btn.to-read {
+            border-color: rgba(200,169,81,0.25);
+            color: #9A8340;
+        }
+        .status-icon-btn.to-read:hover {
+            background: rgba(200,169,81,0.12);
+        }
+
+        .action-btn {
+            width: 30px;
+            height: 28px;
+            border: 1.5px solid rgba(139,69,19,0.1);
+            border-radius: var(--radius-sm);
+            background: none;
+            color: var(--ink-muted);
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn.edit:hover {
+            color: var(--leather);
+            border-color: rgba(139,69,19,0.2);
+            background: rgba(139,69,19,0.04);
+        }
+
+        .action-btn.delete:hover {
+            color: var(--danger);
+            border-color: rgba(155,58,42,0.2);
+            background: var(--danger-bg);
+        }
+
+        /* ═══════════════════════════════════════
+           Admin Panel (in header dropdown)
+           ═══════════════════════════════════════ */
+        .admin-dropdown {
+            position: relative;
+        }
+
+        .admin-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.1);
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 24px rgba(44,24,16,0.12);
+            min-width: 200px;
+            z-index: 100;
+            padding: 0.5rem;
+        }
+
+        .admin-menu.visible { display: block; }
+
+        .admin-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: none;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            color: var(--ink);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .admin-menu-item:hover {
+            background: rgba(139,69,19,0.05);
+        }
+
+        .admin-menu-item i {
+            color: var(--ink-muted);
+            width: 1.2em;
+            text-align: center;
+        }
+
+        .admin-menu-item.danger { color: var(--danger); }
+        .admin-menu-item.danger i { color: var(--danger); }
+
+        /* ═══════════════════════════════════════
+           Edit Modal
+           ═══════════════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(44,24,16,0.3);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.1);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 12px 40px rgba(44,24,16,0.15);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.visible .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(139,69,19,0.08);
+        }
+
+        .modal-header h3 {
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-header h3 i { color: var(--leather); }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--ink-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.2rem;
+        }
+
+        .modal-form .form-group { margin-bottom: 1rem; }
+
+        .modal-form .form-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--ink-muted);
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .modal-form .form-input {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1.5px solid rgba(139,69,19,0.12);
+            border-radius: var(--radius-sm);
+            background: var(--parchment);
+            color: var(--ink);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .modal-form .form-input:focus {
+            border-color: var(--leather);
+            box-shadow: 0 0 0 3px rgba(139,69,19,0.06);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(139,69,19,0.08);
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: var(--parchment-dark);
+            border: 1px solid rgba(139,69,19,0.1);
+            color: var(--ink-muted);
+        }
+        .btn-cancel:hover { background: var(--parchment); }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--leather), var(--leather-light));
+            border: none;
+            color: var(--page-cream);
+        }
+        .btn-save:hover { box-shadow: 0 3px 10px rgba(139,69,19,0.2); }
+
+        /* ═══════════════════════════════════════
+           User Management Modal
+           ═══════════════════════════════════════ */
+        .user-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .user-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(139,69,19,0.06);
+        }
+
+        .user-list-item:last-child { border-bottom: none; }
+
+        .user-list-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-list-info .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--parchment-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--ink-muted);
+        }
+
+        .user-list-info span {
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .user-badge {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 2rem;
+            background: rgba(139,69,19,0.08);
+            color: var(--leather);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .user-delete-btn {
+            background: none;
+            border: none;
+            color: var(--ink-muted);
+            opacity: 0.5;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+        }
+
+        .user-delete-btn:hover {
+            color: var(--danger);
+            opacity: 1;
+        }
+
+        /* ═══════════════════════════════════════
+           Toast Notification
+           ═══════════════════════════════════════ */
+        .toast {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            left: 1.25rem;
+            max-width: 360px;
+            margin-left: auto;
+            background: var(--page-cream);
+            border: 1px solid rgba(139,69,19,0.12);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            box-shadow: 0 8px 24px rgba(44,24,16,0.12);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--ink);
+            z-index: 300;
+            transform: translateY(1rem);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .toast-icon { font-size: 0.9rem; }
+        .toast-icon.success { color: var(--success-green); }
+        .toast-icon.error { color: var(--danger); }
+        .toast-icon.info { color: var(--leather); }
+
+        /* ═══════════════════════════════════════
+           Footer
+           ═══════════════════════════════════════ */
+        .app-footer {
+            margin-top: 2.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(139,69,19,0.06);
+            text-align: center;
+            font-size: 0.68rem;
+            color: var(--ink-muted);
+            opacity: 0.5;
+        }
+
+        /* ═══════════════════════════════════════
+           Responsive adjustments
+           ═══════════════════════════════════════ */
+        @media (max-width: 600px) {
+            .header-right .stat-badge { display: none; }
+            .app-header { flex-wrap: wrap; gap: 0.5rem; }
+            .search-input { font-size: 0.82rem; }
+            .dropdown-actions { flex-direction: column; gap: 0.25rem; }
+            .dropdown-item { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+            .dropdown-actions { flex-direction: row; width: 100%; }
+            .dropdown-actions button { flex: 1; }
+        }
+
+        /* ═══════════════════════════════════════
+           Shelf View Modal
+           ═══════════════════════════════════════ */
+        .shelf-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(18, 16, 14, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 2rem 1rem;
+        }
+
+        .shelf-modal.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .shelf-modal-content {
+            background: var(--page-cream);
+            border: 1px solid rgba(139, 69, 19, 0.15);
+            border-radius: var(--radius-xl);
+            max-width: 1400px;
+            width: 100%;
+            min-height: 60vh;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .shelf-modal-content { padding: 2.5rem; }
+        }
+
+        .shelf-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid rgba(139, 69, 19, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .shelf-modal-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--leather);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .shelf-modal-close {
+            background: none;
+            border: none;
+            color: var(--ink-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .shelf-modal-close:hover { color: var(--danger); }
+
+        .shelf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 2.5rem 0.5rem;
+            justify-items: center;
+            padding-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .shelf-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 3.5rem 2.5rem;
             }
         }
-    </script>
-    <style>
-        /* Custom scrollbar styling for a premium look */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+
+        @media (min-width: 1024px) {
+            .shelf-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
         }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
+
+        .shelf-book {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            width: 100%;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
+
+        .shelf-book img, .shelf-book .book-cover-placeholder {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
             border-radius: 4px;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.15), 5px 5px 20px rgba(0,0,0,0.4);
+            z-index: 2;
+            position: relative;
+            transition: transform 0.2s;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+
+        @media (min-width: 768px) {
+            .shelf-book img, .shelf-book .book-cover-placeholder {
+                width: 130px;
+                height: 195px;
+            }
         }
-        
-        /* Ambient glow animation */
-        @keyframes float {
-            0% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-10px) scale(1.05); }
-            100% { transform: translateY(0px) scale(1); }
+
+        @media (min-width: 1024px) {
+            .shelf-book img, .shelf-book .book-cover-placeholder {
+                width: 160px;
+                height: 240px;
+            }
         }
-        .ambient-glow {
-            filter: blur(80px);
-            opacity: 0.15;
-            animation: float 8s ease-in-out infinite;
+
+        .shelf-book:hover img, .shelf-book:hover .book-cover-placeholder {
+            transform: translateY(-8px);
         }
+
+        /* Wooden shelf platform for each book */
+        .shelf-book::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: -15%;
+            right: -15%;
+            height: 16px;
+            background: linear-gradient(to bottom, var(--leather), var(--leather-dark));
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border-radius: 3px;
+            z-index: 1;
+        }
+
+        .expand-btn {
+            background: none;
+            border: none;
+            color: var(--ink-muted);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 0.2rem;
+        }
+        .expand-btn:hover { color: var(--leather); }
     </style>
 </head>
-<body class="bg-brand-950 text-slate-100 min-h-screen relative overflow-x-hidden selection:bg-brand-500 selection:text-white">
-
-    <!-- Background decorative ambient glows -->
-    <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-brand-500 ambient-glow pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500 ambient-glow pointer-events-none"></div>
-
-    <div class="max-w-6xl mx-auto px-4 py-6 md:py-8 relative z-10 flex flex-col min-h-screen">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 pb-6 border-b border-slate-800/80 gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gradient-to-tr from-brand-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
-                    <i class="fa-solid fa-book-bookmark text-white text-xl"></i>
+<body>
+    <div class="bg-artifacts">
+        <i class="fa-solid fa-feather" style="top: 20%; left: 3%;"></i>
+        <i class="fa-solid fa-mug-hot" style="bottom: 15%; right: 3%;"></i>
+        <i class="fa-solid fa-glasses" style="top: 25%; right: 4%;"></i>
+        <i class="fa-solid fa-book-open" style="bottom: 25%; left: 4%;"></i>
+    </div>
+    <div class="app-container">
+        <!-- ═══ Header ═══ -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-200 to-brand-300 bg-clip-text text-transparent">Ohara</h1>
-                    <p class="text-xs text-slate-400 font-medium tracking-wider uppercase">Personal Book Tracker</p>
+                    <h1 class="header-title">Ohara</h1>
+                    <p class="header-subtitle">Book Tracker</p>
                 </div>
             </div>
-            
-            <!-- Quick Stats (Hidden on narrow mobile in header, moved to tabs) -->
-            <div class="hidden sm:flex gap-4">
-                <div class="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex items-center gap-3">
-                    <span class="w-2.5 h-2.5 rounded-full bg-brand-400"></span>
-                    <span class="text-xs text-slate-400 font-medium">To Read: <strong id="stat-to-read" class="text-slate-200 text-sm ml-1">0</strong></span>
+
+            <div class="header-right">
+                <div class="stat-badge">
+                    <span class="stat-dot to-read"></span>
+                    To Read: <span class="stat-value" id="stat-to-read">0</span>
                 </div>
-                <div class="px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex items-center gap-3">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-                    <span class="text-xs text-slate-400 font-medium">Already Read: <strong id="stat-read" class="text-slate-200 text-sm ml-1">0</strong></span>
+                <div class="stat-badge">
+                    <span class="stat-dot reading"></span>
+                    Reading: <span class="stat-value" id="stat-reading">0</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-dot read"></span>
+                    Read: <span class="stat-value" id="stat-read">0</span>
+                </div>
+
+                <div class="user-section">
+                    <button class="btn-icon" onclick="openStatsModal()" title="Reading Stats" style="margin-right: 0.5rem;">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </button>
+                    <span class="user-name">{{ user.username }}</span>
+                    <div class="admin-dropdown">
+                        <button class="btn-icon" id="menu-toggle-btn" title="Menu">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <div class="admin-menu" id="admin-menu">
+                            {% if user.is_admin %}
+                            <button class="admin-menu-item" onclick="openUserManagement()">
+                                <i class="fa-solid fa-users-gear"></i> Manage Users
+                            </button>
+                            {% endif %}
+                            <form method="POST" action="/logout" style="display:contents;">
+                                <button type="submit" class="admin-menu-item danger">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Search Bar Section -->
-        <section class="max-w-2xl mx-auto w-full mb-8 relative">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400" id="search-icon"></i>
-                    <!-- Spinner for loading search -->
-                    <div id="search-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-brand-500 border-t-transparent"></div>
-                </div>
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    placeholder="Search by title, author, or ISBN..." 
-                    class="w-full pl-11 pr-10 py-3.5 bg-slate-900/70 border border-slate-800 hover:border-slate-700/80 focus:border-brand-500 rounded-2xl text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all backdrop-blur-md shadow-inner text-sm"
-                    autocomplete="off"
-                >
-                <div class="absolute inset-y-0 right-0 pr-4 flex items-center">
-                    <button id="clear-search-btn" class="hidden text-slate-400 hover:text-slate-200 focus:outline-none">
+        <!-- ═══ Search ═══ -->
+        <section class="search-section">
+            <div class="search-bar">
+                <div class="search-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass search-icon" id="search-icon"></i>
+                    <div class="search-spinner" id="search-spinner"></div>
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-input"
+                        placeholder="Search by title, author, or ISBN..."
+                        autocomplete="off"
+                    >
+                    <button class="search-clear-btn" id="clear-search-btn">
                         <i class="fa-solid fa-circle-xmark"></i>
                     </button>
                 </div>
+                <button class="search-btn" id="search-btn" title="Search">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
             </div>
+            <p class="search-hint">Press <strong>Enter</strong> or click Search to find books</p>
 
-            <!-- Autocomplete Results Dropdown -->
-            <div 
-                id="search-dropdown" 
-                class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-slate-800/90 rounded-2xl shadow-2xl shadow-black/80 backdrop-blur-lg z-50 max-h-[420px] overflow-y-auto divide-y divide-slate-800/60 transition-all duration-200"
-            >
-                <!-- Dynamic search items go here -->
-            </div>
+            <div class="search-dropdown" id="search-dropdown"></div>
         </section>
 
-        <!-- Toggle Button for Custom Book Form -->
-        <div class="text-center mb-8 -mt-4">
-            <button onclick="toggleManualForm()" class="text-[11px] sm:text-xs text-brand-300 hover:text-brand-200 transition-colors font-medium inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 rounded-xl backdrop-blur-sm active:scale-95 transition-all">
-                <i class="fa-solid fa-circle-plus text-brand-400"></i> Can't find your book? Add it manually
-            </button>
-        </div>
-
-        <!-- Custom Manual Book Entry Form -->
-        <div id="manual-book-form" class="hidden max-w-2xl mx-auto mb-8 p-6 bg-slate-900/70 border border-slate-800/90 rounded-3xl backdrop-blur-md shadow-2xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800/60">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <i class="fa-solid fa-circle-plus text-brand-400"></i> Add Custom Book
-                </h3>
-                <button onclick="toggleManualForm()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+        <!-- ═══ Manual Add ═══ -->
+        <div class="manual-form-wrapper">
+            <div class="manual-add-toggle">
+                <button onclick="toggleManualForm()">
+                    <i class="fa-solid fa-plus"></i> Can't find your book? Add manually
+                </button>
             </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Book Title *</label>
-                    <input type="text" id="manual-title" placeholder="e.g. The Hobbit" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all animate-none">
+
+            <div class="manual-form" id="manual-form">
+                <div class="manual-form-header">
+                    <h3><i class="fa-solid fa-plus-circle" style="color:var(--leather)"></i> Add Custom Book</h3>
+                    <button class="manual-form-close" onclick="toggleManualForm()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Authors (comma-separated)</label>
-                    <input type="text" id="manual-authors" placeholder="e.g. J.R.R. Tolkien, Christopher Tolkien" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all animate-none">
+                <div class="form-group">
+                    <label class="form-label" for="manual-title">Book Title *</label>
+                    <input class="form-input" type="text" id="manual-title" placeholder="e.g. The Hobbit">
                 </div>
-                <div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Cover Image URL (optional)</label>
-                    <input type="text" id="manual-cover" placeholder="e.g. https://example.com/cover.jpg" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all animate-none">
+                <div class="form-group">
+                    <label class="form-label" for="manual-authors">Authors (comma-separated)</label>
+                    <input class="form-input" type="text" id="manual-authors" placeholder="e.g. J.R.R. Tolkien">
                 </div>
-                <div class="flex gap-3 pt-2">
-                    <button onclick="submitManualBook('to_read')" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-900/20 active:scale-95 flex items-center justify-center gap-1.5">
-                        <span>🎯</span> Wishlist
-                    </button>
-                    <button onclick="submitManualBook('read')" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-cyan-900/20 active:scale-95 flex items-center justify-center gap-1.5">
-                        <span>✅</span> Read
-                    </button>
+                <div class="form-group">
+                    <label class="form-label" for="manual-cover">Cover Image URL (optional)</label>
+                    <input class="form-input" type="text" id="manual-cover" placeholder="https://...">
+                </div>
+                <div class="manual-form-actions">
+                    <button class="btn-manual-toread" onclick="submitManualBook('to_read')"><i class="fa-solid fa-bookmark"></i> Wishlist</button>
+                    <button class="btn-manual-reading" onclick="submitManualBook('reading')"><i class="fa-solid fa-book-open-reader"></i> Reading</button>
+                    <button class="btn-manual-read" onclick="submitManualBook('read')"><i class="fa-solid fa-circle-check"></i> Read</button>
                 </div>
             </div>
         </div>
 
-        <!-- Mobile Tab Navigation Bar (Visible only on mobile/tablet screens < 1024px) -->
-        <div class="lg:hidden flex p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl mb-6 backdrop-blur-md sticky top-2 z-40 shadow-lg shadow-black/40">
-            <button 
-                id="tab-btn-to_read" 
-                onclick="setActiveTab('to_read')"
-                class="flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-brand-300 bg-brand-500/10 border border-brand-500/20"
-            >
-                <span>🎯</span> To Read (<span id="mobile-count-to-read">0</span>)
+        <!-- ═══ Mobile Tabs ═══ -->
+        <div class="mobile-tabs">
+            <button class="mobile-tab active-toread" id="tab-to_read" onclick="setActiveTab('to_read')">
+                <i class="fa-solid fa-bookmark"></i> To Read (<span id="mob-count-toread">0</span>)
             </button>
-            <button 
-                id="tab-btn-read" 
-                onclick="setActiveTab('read')"
-                class="flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent"
-            >
-                <span>✅</span> Already Read (<span id="mobile-count-read">0</span>)
+            <button class="mobile-tab" id="tab-reading" onclick="setActiveTab('reading')">
+                <i class="fa-solid fa-book-open-reader"></i> Reading (<span id="mob-count-reading">0</span>)
+            </button>
+            <button class="mobile-tab" id="tab-read" onclick="setActiveTab('read')">
+                <i class="fa-solid fa-circle-check"></i> Read (<span id="mob-count-read">0</span>)
             </button>
         </div>
 
-        <!-- Dashboard / Book Lists Grid -->
-        <main id="dashboard-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 flex-grow">
-            
+        <!-- ═══ Dashboard Grid ═══ -->
+        <main class="dashboard" id="dashboard">
             <!-- Column 1: Want to Read -->
-            <section class="flex flex-col">
-                <div class="hidden lg:flex items-center justify-between mb-4 px-1">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center border border-brand-500/20">
-                            <span class="text-base">🎯</span>
-                        </div>
-                        <h2 class="text-lg font-bold text-slate-200">Want to Read</h2>
+            <section class="book-column" id="col-to_read">
+                <div class="column-header">
+                    <div class="column-header-left">
+                        <div class="column-icon to-read"><i class="fa-solid fa-bookmark" style="color: var(--bookmark-red);"></i></div>
+                        <h2 class="column-title">Want to Read</h2>
                     </div>
-                    <span id="count-to-read" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/20">0 books</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="column-count to-read" id="count-to-read">0 books</span>
+                        <button class="expand-btn" onclick="openShelfView('to_read', 'Want to Read')" title="Shelf View"><i class="fa-solid fa-expand"></i></button>
+                    </div>
                 </div>
-                
-                <div 
-                    id="list-to-read" 
-                    class="flex-grow bg-slate-900/30 border border-slate-900 rounded-3xl p-4 sm:p-6 min-h-[360px] lg:min-h-[400px] flex flex-col gap-4 backdrop-blur-sm"
-                >
-                    <!-- Loading or empty state -->
-                    <div class="flex-grow flex flex-col items-center justify-center text-center text-slate-500 py-12 empty-state">
-                        <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
-                            <i class="fa-regular fa-bookmark text-2xl text-slate-600"></i>
-                        </div>
-                        <p class="font-medium text-slate-400">Your wishlist is empty</p>
-                        <p class="text-xs text-slate-500 mt-1 max-w-[240px]">Search for books above and add them to your tracking list.</p>
+                <div class="column-body" id="list-to-read">
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fa-regular fa-bookmark"></i></div>
+                        <h4>Your wishlist is empty</h4>
+                        <p>Search for books and add them to start building your reading list.</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Column 2: Already Read -->
-            <section class="flex flex-col">
-                <div class="hidden lg:flex items-center justify-between mb-4 px-1">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                            <span class="text-base">✅</span>
-                        </div>
-                        <h2 class="text-lg font-bold text-slate-200">Already Read</h2>
+            <!-- Column 2: Currently Reading -->
+            <section class="book-column" id="col-reading">
+                <div class="column-header">
+                    <div class="column-header-left">
+                        <div class="column-icon reading"><i class="fa-solid fa-book-open-reader" style="color: var(--spine-green);"></i></div>
+                        <h2 class="column-title">Currently Reading</h2>
                     </div>
-                    <span id="count-read" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">0 books</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="column-count reading" id="count-reading">0 books</span>
+                        <button class="expand-btn" onclick="openShelfView('reading', 'Currently Reading')" title="Shelf View"><i class="fa-solid fa-expand"></i></button>
+                    </div>
                 </div>
-                
-                <div 
-                    id="list-read" 
-                    class="flex-grow bg-slate-900/30 border border-slate-900 rounded-3xl p-4 sm:p-6 min-h-[360px] lg:min-h-[400px] flex flex-col gap-4 backdrop-blur-sm"
-                >
-                    <!-- Loading or empty state -->
-                    <div class="flex-grow flex flex-col items-center justify-center text-center text-slate-500 py-12 empty-state">
-                        <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
-                            <i class="fa-regular fa-circle-check text-2xl text-slate-600"></i>
-                        </div>
-                        <p class="font-medium text-slate-400">No read books yet</p>
-                        <p class="text-xs text-slate-500 mt-1 max-w-[240px]">Once you finish a book, toggle its status to show it off here.</p>
+                <div class="column-body" id="list-reading">
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                        <h4>Nothing in progress</h4>
+                        <p>Move a book here when you start reading it.</p>
                     </div>
                 </div>
             </section>
 
+            <!-- Column 3: Already Read -->
+            <section class="book-column" id="col-read">
+                <div class="column-header">
+                    <div class="column-header-left">
+                        <div class="column-icon read"><i class="fa-solid fa-circle-check" style="color: var(--gold-leaf);"></i></div>
+                        <h2 class="column-title">Already Read</h2>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="column-count read" id="count-read">0 books</span>
+                        <button class="expand-btn" onclick="openShelfView('read', 'Already Read')" title="Shelf View"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="column-body" id="list-read">
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fa-regular fa-circle-check"></i></div>
+                        <h4>No books finished yet</h4>
+                        <p>Mark books as read to track your accomplishments.</p>
+                    </div>
+                </div>
+            </section>
         </main>
 
-        <!-- Footer -->
-        <footer class="mt-12 md:mt-16 pt-6 border-t border-slate-900 text-center text-[10px] sm:text-xs text-slate-500">
-            <p>Ohara App &bull; Powered by FastAPI & Google Books API</p>
+        <!-- ═══ Footer ═══ -->
+        <footer class="app-footer">
+            <p>Ohara &bull; Powered by FastAPI & Open Library</p>
         </footer>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 left-5 sm:left-auto transform translate-y-10 opacity-0 bg-slate-900 border border-brand-500/30 text-slate-200 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 z-50 flex items-center gap-2 text-xs">
-        <i class="fa-solid fa-circle-info text-brand-400" id="toast-icon"></i>
-        <span id="toast-message">Message here</span>
+    <!-- ═══ Toast ═══ -->
+    <div class="toast" id="toast">
+        <i class="toast-icon info fa-solid fa-circle-info" id="toast-icon"></i>
+        <span id="toast-message">Message</span>
     </div>
 
-    <!-- Edit Book Modal (Hidden by default) -->
-    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative transform scale-95 transition-transform duration-300">
-            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800/60">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                    <i class="fa-regular fa-pen-to-square text-brand-400"></i> Edit Book Details
-                </h3>
-                <button onclick="closeEditModal()" class="text-slate-500 hover:text-slate-300 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <!-- ═══ Edit Book Modal ═══ -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-regular fa-pen-to-square"></i> Edit Book</h3>
+                <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
             <input type="hidden" id="edit-book-id">
             <input type="hidden" id="edit-book-status">
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Book Title *</label>
-                    <input type="text" id="edit-title" placeholder="Book Title" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all">
+            <div class="modal-form">
+                <div class="form-group">
+                    <label class="form-label" for="edit-title">Book Title *</label>
+                    <input class="form-input" type="text" id="edit-title" placeholder="Book Title">
                 </div>
-                <div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Authors (comma-separated)</label>
-                    <input type="text" id="edit-authors" placeholder="Authors" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all">
+                <div class="form-group">
+                    <label class="form-label" for="edit-authors">Authors (comma-separated)</label>
+                    <input class="form-input" type="text" id="edit-authors" placeholder="Authors">
                 </div>
-                <div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1">Cover Image URL (optional)</label>
-                    <input type="text" id="edit-cover" placeholder="Cover URL" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl text-xs focus:outline-none text-slate-200 transition-all">
+                <div class="form-group">
+                    <label class="form-label" for="edit-cover">Cover Image URL</label>
+                    <input class="form-input" type="text" id="edit-cover" placeholder="Cover URL">
                 </div>
-                
-                <div class="flex gap-3 pt-4 border-t border-slate-800/60 mt-6">
-                    <button onclick="closeEditModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all active:scale-95">
-                        Cancel
-                    </button>
-                    <button onclick="saveEditBook()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-900/20 active:scale-95">
-                        Save Changes
-                    </button>
+                <div class="form-group" style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label class="form-label" for="edit-pages">Pages</label>
+                        <input class="form-input" type="number" id="edit-pages" placeholder="e.g. 350">
+                    </div>
                 </div>
+                <div class="form-group" style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label class="form-label" for="edit-date-started">Date Started</label>
+                        <input class="form-input" type="date" id="edit-date-started">
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label" for="edit-date-finished">Date Finished</label>
+                        <input class="form-input" type="date" id="edit-date-finished">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-save" onclick="saveEditBook()">Save Changes</button>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript logic -->
+    <!-- ═══ User Management Modal ═══ -->
+    <div class="modal-overlay" id="user-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-users-gear"></i> Manage Users</h3>
+                <button class="modal-close" onclick="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="user-list" id="user-list">
+                <!-- Dynamic user list -->
+            </div>
+            <div class="modal-form">
+                <div class="form-group">
+                    <label class="form-label">Add New User</label>
+                    <input class="form-input" type="text" id="new-username" placeholder="Username" style="margin-bottom:0.5rem">
+                    <input class="form-input" type="password" id="new-password" placeholder="Password">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeUserModal()">Close</button>
+                <button class="btn-save" onclick="addNewUser()"><i class="fa-solid fa-user-plus"></i> Add User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Shelf View Modal ═══ -->
+    <div class="shelf-modal" id="shelf-modal">
+        <div class="shelf-modal-content">
+            <div class="shelf-modal-header">
+                <h2 class="shelf-modal-title" id="shelf-modal-title"><i class="fa-solid fa-book-bookmark"></i> Shelf View</h2>
+                <button class="shelf-modal-close" onclick="closeShelfView()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="shelf-grid" id="shelf-grid">
+                <!-- Dynamic books -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ═══ Stats Modal ═══ -->
+    <div class="modal-overlay" id="stats-modal">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Reading Stats <span style="font-size: 0.9rem; font-weight: normal; color: var(--ink-muted);">(This Year)</span></h3>
+                <button class="modal-close" onclick="closeStatsModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.5rem; text-align: center;">
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--leather-light);" id="stat-books-year">0</div>
+                    <div style="font-size: 0.8rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Books Read</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--leather-light);" id="stat-hours-year">0</div>
+                    <div style="font-size: 0.8rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Hours Reading</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--leather-light);" id="stat-pages-year">0</div>
+                    <div style="font-size: 0.8rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Pages Read</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--leather-light);" id="stat-avg-days">0</div>
+                    <div style="font-size: 0.8rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Avg Days / Book</div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 0.75rem;">
+                <p style="margin-bottom: 0.5rem; font-size: 0.9rem;"><strong>Fastest Read:</strong> <span id="stat-fastest-book" style="color: var(--leather-light);">N/A</span></p>
+                <p style="font-size: 0.9rem;"><strong>Longest Conquered:</strong> <span id="stat-longest-book" style="color: var(--leather-light);">N/A</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         JavaScript
+         ═══════════════════════════════════════ -->
     <script>
-        // Main Application State
+        // ─── App State ───
         const state = {
             savedBooks: [],
-            isSearching: false,
-            debounceTimeout: null,
-            activeTab: 'to_read' // 'to_read' or 'read'
+            searchResults: [],
+            activeTab: 'to_read'
         };
 
-        // DOM Element Cache
-        const searchInput = document.getElementById('search-input');
-        const searchDropdown = document.getElementById('search-dropdown');
-        const searchIcon = document.getElementById('search-icon');
-        const searchSpinner = document.getElementById('search-spinner');
-        const clearSearchBtn = document.getElementById('clear-search-btn');
-        
-        const listToRead = document.getElementById('list-to-read');
-        const listRead = document.getElementById('list-read');
-        
-        const countToRead = document.getElementById('count-to-read');
-        const countRead = document.getElementById('count-read');
-        const statToRead = document.getElementById('stat-to-read');
-        const statRead = document.getElementById('stat-read');
+        // ─── DOM Cache ───
+        const $ = id => document.getElementById(id);
+        const searchInput = $('search-input');
+        const searchDropdown = $('search-dropdown');
+        const searchIcon = $('search-icon');
+        const searchSpinner = $('search-spinner');
+        const clearSearchBtn = $('clear-search-btn');
+        const searchBtn = $('search-btn');
+        const toast = $('toast');
+        const toastMsg = $('toast-message');
+        const toastIcon = $('toast-icon');
 
-        const toast = document.getElementById('toast');
-        const toastMsg = document.getElementById('toast-message');
-        const toastIcon = document.getElementById('toast-icon');
-
-        // Toast Helper
+        // ─── Toast ───
         function showNotification(message, type = 'info') {
             toastMsg.innerText = message;
-            if (type === 'success') {
-                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
-                toast.className = toast.className.replace(/border-[a-z0-9-/]+/g, '') + " border-emerald-500/40";
-            } else if (type === 'error') {
-                toastIcon.className = "fa-solid fa-circle-xmark text-rose-400";
-                toast.className = toast.className.replace(/border-[a-z0-9-/]+/g, '') + " border-rose-500/40";
-            } else {
-                toastIcon.className = "fa-solid fa-circle-info text-brand-400";
-                toast.className = toast.className.replace(/border-[a-z0-9-/]+/g, '') + " border-brand-500/40";
-            }
-
-            // Slide up & fade in
-            toast.classList.remove('translate-y-10', 'opacity-0');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-            }, 3000);
+            toastIcon.className = 'toast-icon ' + type + ' fa-solid ' + (
+                type === 'success' ? 'fa-circle-check' :
+                type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info'
+            );
+            toast.classList.add('visible');
+            clearTimeout(state.toastTimeout);
+            state.toastTimeout = setTimeout(() => toast.classList.remove('visible'), 3500);
         }
 
-        // Fetch saved books from server
+        // ─── Fetch Saved Books ───
         async function fetchSavedBooks() {
             try {
-                const response = await fetch('/api/books');
-                if (!response.ok) throw new Error("Could not fetch books");
-                state.savedBooks = await response.json();
+                const res = await fetch('/api/books');
+                if (res.status === 401) { window.location.href = '/login'; return; }
+                if (!res.ok) throw new Error('Could not fetch books');
+                state.savedBooks = await res.json();
                 renderDashboard();
             } catch (err) {
                 console.error(err);
-                showNotification("Failed to load your dashboard books", "error");
+                showNotification('Failed to load your books', 'error');
             }
         }
 
-        // Helper: escape quotes or HTML to prevent injection
-        function escapeHtml(text) {
+        // ─── HTML Escape ───
+        function esc(text) {
             if (!text) return '';
-            return text
-                .toString()
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return text.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        // Mobile active tab logic
+        // ─── Mobile Tab Logic ───
         function setActiveTab(tab) {
             state.activeTab = tab;
-            
-            const btnToRead = document.getElementById('tab-btn-to_read');
-            const btnRead = document.getElementById('tab-btn-read');
-            
-            if (tab === 'to_read') {
-                btnToRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-brand-300 bg-brand-500/10 border border-brand-500/20";
-                btnRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent";
-            } else {
-                btnRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-cyan-300 bg-cyan-500/10 border border-cyan-500/20";
-                btnToRead.className = "flex-1 py-3 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent";
-            }
 
-            syncMobileTabVisibility();
+            document.querySelectorAll('.mobile-tab').forEach(btn => {
+                btn.className = 'mobile-tab';
+            });
+
+            const activeBtn = $('tab-' + tab);
+            if (tab === 'to_read') activeBtn.classList.add('active-toread');
+            else if (tab === 'reading') activeBtn.classList.add('active-reading');
+            else activeBtn.classList.add('active-read');
+
+            syncMobileView();
         }
 
-        function syncMobileTabVisibility() {
-            const containerToRead = listToRead.parentElement;
-            const containerRead = listRead.parentElement;
-
-            // Tailor columns visibility for screens < 1024px
-            if (window.innerWidth < 1024) {
-                if (state.activeTab === 'to_read') {
-                    containerToRead.style.display = 'flex';
-                    containerRead.style.display = 'none';
+        function syncMobileView() {
+            const isMobile = window.innerWidth < 1024;
+            const cols = ['to_read', 'reading', 'read'];
+            cols.forEach(col => {
+                const el = $('col-' + col);
+                if (isMobile) {
+                    el.style.display = col === state.activeTab ? 'flex' : 'none';
                 } else {
-                    containerRead.style.display = 'flex';
-                    containerToRead.style.display = 'none';
+                    el.style.display = 'flex';
                 }
-            } else {
-                // Restore desktop view layouts
-                containerToRead.style.display = 'flex';
-                containerRead.style.display = 'flex';
-            }
+            });
         }
 
-        // Render dashboard lists based on current state
+        // ─── Render Dashboard ───
         function renderDashboard() {
-            const toReadBooks = state.savedBooks.filter(b => b.status === 'to_read');
-            const readBooks = state.savedBooks.filter(b => b.status === 'read');
+            const toRead = state.savedBooks.filter(b => b.status === 'to_read');
+            const reading = state.savedBooks.filter(b => b.status === 'reading');
+            const read = state.savedBooks.filter(b => b.status === 'read');
 
-            // Update stats & counts
-            const trCountText = `${toReadBooks.length} book${toReadBooks.length !== 1 ? 's' : ''}`;
-            const rCountText = `${readBooks.length} book${readBooks.length !== 1 ? 's' : ''}`;
-            
-            countToRead.innerText = trCountText;
-            countRead.innerText = rCountText;
-            statToRead.innerText = toReadBooks.length;
-            statRead.innerText = readBooks.length;
+            // Stats
+            $('stat-to-read').innerText = toRead.length;
+            $('stat-reading').innerText = reading.length;
+            $('stat-read').innerText = read.length;
 
-            // Sync Mobile Counters
-            document.getElementById('mobile-count-to-read').innerText = toReadBooks.length;
-            document.getElementById('mobile-count-read').innerText = readBooks.length;
+            // Column counts
+            const countText = n => `${n} book${n !== 1 ? 's' : ''}`;
+            $('count-to-read').innerText = countText(toRead.length);
+            $('count-reading').innerText = countText(reading.length);
+            $('count-read').innerText = countText(read.length);
+
+            // Mobile counts
+            $('mob-count-toread').innerText = toRead.length;
+            $('mob-count-reading').innerText = reading.length;
+            $('mob-count-read').innerText = read.length;
 
             // Render columns
-            renderColumn(listToRead, toReadBooks, 'to_read');
-            renderColumn(listRead, readBooks, 'read');
+            renderColumn($('list-to-read'), toRead, 'to_read');
+            renderColumn($('list-reading'), reading, 'reading');
+            renderColumn($('list-read'), read, 'read');
 
-            // Set current active mobile view columns
-            syncMobileTabVisibility();
+            syncMobileView();
         }
 
-        // Render helper for single list column
         function renderColumn(container, books, status) {
             const emptyState = container.querySelector('.empty-state');
-            
-            // Clear existing book cards
-            const cards = container.querySelectorAll('.book-card');
-            cards.forEach(card => card.remove());
+            container.querySelectorAll('.book-card').forEach(c => c.remove());
 
             if (books.length === 0) {
-                if (emptyState) emptyState.classList.remove('hidden');
+                if (emptyState) emptyState.style.display = 'flex';
                 return;
             }
-
-            if (emptyState) emptyState.classList.add('hidden');
+            if (emptyState) emptyState.style.display = 'none';
 
             books.forEach(book => {
                 const card = document.createElement('div');
-                card.className = "book-card flex items-start gap-4 p-4 bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800/80 hover:border-slate-700/60 rounded-2xl transition-all duration-300 shadow-md group";
-                
-                const coverImage = book.cover_url 
-                    ? `<img src="${escapeHtml(book.cover_url)}" alt="${escapeHtml(book.title)} cover" class="w-16 h-24 object-cover rounded-lg shadow-md group-hover:scale-[1.03] transition-transform duration-300 bg-slate-800 flex-shrink-0">`
-                    : `<div class="w-16 h-24 rounded-lg bg-slate-800/60 border border-slate-700 flex flex-col items-center justify-center text-slate-500 shadow-md flex-shrink-0"><i class="fa-solid fa-book text-xl"></i><span class="text-[9px] mt-1 font-semibold uppercase">No Cover</span></div>`;
+                card.className = 'book-card';
+
+                const cover = book.cover_url
+                    ? `<img src="${esc(book.cover_url)}" alt="${esc(book.title)}" class="book-cover" loading="lazy">`
+                    : `<div class="book-cover-placeholder"><i class="fa-solid fa-book"></i><span>No Cover</span></div>`;
 
                 const authors = book.authors && book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author';
-                
+
+                // Build status transition buttons based on current status
+                let statusBtns = '';
+                if (status === 'to_read') {
+                    statusBtns = `
+                        <button class="status-icon-btn to-reading" data-tooltip="Start Reading" onclick="changeStatus('${esc(book.id)}','reading')"><i class="fa-solid fa-book-open-reader" style="color:var(--spine-green)"></i></button>
+                        <button class="status-icon-btn to-read" data-tooltip="Mark as Read" onclick="changeStatus('${esc(book.id)}','read')"><i class="fa-solid fa-circle-check" style="color:#A8914B"></i></button>
+                    `;
+                } else if (status === 'reading') {
+                    statusBtns = `
+                        <button class="status-icon-btn to-toread" data-tooltip="Back to Wishlist" onclick="changeStatus('${esc(book.id)}','to_read')"><i class="fa-solid fa-bookmark" style="color:var(--bookmark-red)"></i></button>
+                        <button class="status-icon-btn to-read" data-tooltip="Finished!" onclick="changeStatus('${esc(book.id)}','read')"><i class="fa-solid fa-circle-check" style="color:#A8914B"></i></button>
+                    `;
+                } else {
+                    statusBtns = `
+                        <button class="status-icon-btn to-toread" data-tooltip="Back to Wishlist" onclick="changeStatus('${esc(book.id)}','to_read')"><i class="fa-solid fa-bookmark" style="color:var(--bookmark-red)"></i></button>
+                        <button class="status-icon-btn to-reading" data-tooltip="Re-read" onclick="changeStatus('${esc(book.id)}','reading')"><i class="fa-solid fa-book-open-reader" style="color:var(--spine-green)"></i></button>
+                    `;
+                }
+
+                let bookMetaHtml = '';
+                if (status === 'read' || status === 'reading') {
+                    let metaText = '';
+                    if (book.pages) metaText += `<span style="margin-right:0.75rem;" title="${book.pages} pages"><i class="fa-regular fa-file-lines"></i> ${book.pages}</span>`;
+                    
+                    if (book.date_started && book.date_finished) {
+                        const start = new Date(book.date_started);
+                        const end = new Date(book.date_finished);
+                        const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                        metaText += `<span title="${days} days spent reading"><i class="fa-regular fa-clock"></i> ${days}d</span>`;
+                    } else if (book.date_started && status === 'reading') {
+                        const start = new Date(book.date_started);
+                        const end = new Date();
+                        const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                        metaText += `<span title="Reading for ${days} days so far"><i class="fa-regular fa-clock"></i> ${days}d</span>`;
+                    }
+
+                    if (metaText) {
+                        bookMetaHtml = `<div style="font-size:0.75rem; color:var(--ink-muted); margin-top:0.25rem;">${metaText}</div>`;
+                    }
+                }
+
                 card.innerHTML = `
-                    <div class="flex-shrink-0">
-                        ${coverImage}
-                    </div>
-                    <div class="flex-grow min-w-0 flex flex-col justify-between h-24">
-                        <div class="min-w-0">
-                            <h3 class="text-sm font-bold text-slate-100 truncate pr-1" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</h3>
-                            <p class="text-xs text-slate-400 mt-1 truncate" title="${escapeHtml(authors)}">${escapeHtml(authors)}</p>
+                    ${cover}
+                    <div class="book-info">
+                        <div>
+                            <div class="book-title" title="${esc(book.title)}">${esc(book.title)}</div>
+                            <div class="book-authors" title="${esc(authors)}">${esc(authors)}</div>
+                            ${bookMetaHtml}
                         </div>
-                        <div class="flex items-center gap-2 mt-auto">
-                            <!-- Toggle Button -->
-                            <button 
-                                onclick="toggleBookStatus('${escapeHtml(book.id)}')"
-                                class="flex items-center gap-1.5 px-3 py-1.8 py-2 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 ${
-                                    status === 'to_read' 
-                                    ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20' 
-                                    : 'bg-brand-500/10 text-brand-300 hover:bg-brand-500/20 border border-brand-500/20'
-                                }"
-                                title="${status === 'to_read' ? 'Mark as Read' : 'Move back to Wishlist'}"
-                            >
-                                ${status === 'to_read' ? '<i class="fa-solid fa-check text-[10px]"></i> Done' : '<i class="fa-solid fa-rotate-left text-[10px]"></i> Wishlist'}
+                        <div class="book-actions">
+                            ${statusBtns}
+                            <button class="action-btn edit" title="Edit" onclick="openEditModal('${esc(book.id)}')">
+                                <i class="fa-regular fa-pen-to-square"></i>
                             </button>
-                            <!-- Edit Button -->
-                            <button 
-                                onclick="openEditModal('${escapeHtml(book.id)}')"
-                                class="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-brand-300 hover:bg-brand-500/10 border border-slate-800 hover:border-brand-500/20 transition-all duration-200 active:scale-95"
-                                title="Edit book details"
-                            >
-                                <i class="fa-regular fa-pen-to-square text-xs"></i>
-                            </button>
-                            <!-- Delete Button -->
-                            <button 
-                                onclick="deleteBook('${escapeHtml(book.id)}')"
-                                class="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/20 transition-all duration-200 active:scale-95"
-                                title="Remove book"
-                            >
-                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            <button class="action-btn delete" title="Remove" onclick="deleteBook('${esc(book.id)}')">
+                                <i class="fa-regular fa-trash-can"></i>
                             </button>
                         </div>
                     </div>
                 `;
+
+                // Drag and Drop support
+                card.setAttribute('draggable', 'true');
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', book.id);
+                    card.classList.add('dragging');
+                });
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                });
+
                 container.appendChild(card);
             });
         }
 
-        // Add book (POST API)
-        async function saveBook(id, title, authors, cover_url, status) {
-            try {
-                let authorsArray = [];
-                try {
-                    authorsArray = JSON.parse(authors);
-                } catch(e) {
-                    authorsArray = authors ? authors.split(',').map(a => a.trim()) : [];
+        // ─── Stats Logic ───
+        function openStatsModal() {
+            const read = state.savedBooks.filter(b => b.status === 'read');
+            const thisYear = new Date().getFullYear();
+            
+            let totalBooksThisYear = 0;
+            let totalPagesThisYear = 0;
+            let fastestBook = null;
+            let longestBook = null;
+            
+            let totalDaysSpent = 0;
+            let booksWithValidDates = 0;
+
+            read.forEach(b => {
+                const finishedYear = b.date_finished ? parseInt(b.date_finished.substring(0,4)) : 0;
+                if (finishedYear === thisYear) {
+                    totalBooksThisYear++;
+                    if (b.pages) totalPagesThisYear += b.pages;
+                }
+                
+                if (b.pages && (!longestBook || b.pages > longestBook.pages)) {
+                    longestBook = b;
                 }
 
-                const response = await fetch('/api/books', {
+                if (b.date_started && b.date_finished) {
+                    const start = new Date(b.date_started);
+                    const end = new Date(b.date_finished);
+                    // Minimum 1 day
+                    const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                    
+                    totalDaysSpent += days;
+                    booksWithValidDates++;
+
+                    if (!fastestBook || days < fastestBook.days) {
+                        fastestBook = { ...b, days };
+                    }
+                }
+            });
+
+            const avgDays = booksWithValidDates > 0 ? (totalDaysSpent / booksWithValidDates).toFixed(1) : 0;
+            // 160 wpm, ~250 words per page
+            const totalHoursThisYear = totalPagesThisYear > 0 ? ((totalPagesThisYear * 250) / 160 / 60).toFixed(1) : 0;
+
+            $('stat-books-year').innerText = totalBooksThisYear;
+            $('stat-pages-year').innerText = totalPagesThisYear;
+            $('stat-hours-year').innerText = totalHoursThisYear;
+            $('stat-avg-days').innerText = avgDays;
+            
+            $('stat-fastest-book').innerText = fastestBook ? `${fastestBook.title} (${fastestBook.days} days)` : 'N/A';
+            $('stat-longest-book').innerText = longestBook ? `${longestBook.title} (${longestBook.pages} pages)` : 'N/A';
+
+            $('stats-modal').classList.add('visible');
+        }
+
+        function closeStatsModal() {
+            $('stats-modal').classList.remove('visible');
+        }
+
+        // ─── Change Book Status ───
+        async function changeStatus(id, newStatus) {
+            const book = state.savedBooks.find(b => b.id === id);
+            if (!book) return;
+
+            let dateVal = null;
+            if (newStatus === 'reading' || newStatus === 'read') {
+                dateVal = new Date().toISOString().split('T')[0];
+            }
+            
+            await executeChangeStatus(id, newStatus, dateVal);
+        }
+
+        async function executeChangeStatus(id, newStatus, dateVal) {
+            const book = state.savedBooks.find(b => b.id === id);
+            if (!book) return;
+
+            let date_started = book.date_started;
+            let date_finished = book.date_finished;
+
+            if (newStatus === 'reading' && dateVal) date_started = dateVal;
+            if (newStatus === 'read' && dateVal) {
+                date_finished = dateVal;
+                // If it was moved straight to read without starting, set start to finish date to prevent null errors
+                if (!date_started) date_started = dateVal;
+            }
+
+            try {
+                const res = await fetch('/api/books', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, title, authors: authorsArray, cover_url, status })
+                    body: JSON.stringify({
+                        id: book.id,
+                        title: book.title,
+                        authors: book.authors,
+                        cover_url: book.cover_url,
+                        status: newStatus,
+                        pages: book.pages,
+                        date_started: date_started,
+                        date_finished: date_finished
+                    })
                 });
 
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.detail || "Failed to save book");
-                }
-                
-                const result = await response.json();
-                showNotification(result.message || "Book added successfully!", "success");
-                
-                clearSearch();
+                if (!res.ok) throw new Error('Failed to update status');
+
+                const labels = { to_read: 'Want to Read', reading: 'Currently Reading', read: 'Already Read' };
+                showNotification(`Moved "${book.title}" to ${labels[newStatus]}`, 'success');
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification(err.message || "Could not add book. Please try again.", "error");
+                showNotification('Failed to move book', 'error');
             }
         }
 
-        // Save book by its index in the search results cache
+        // ─── Save Book (from search) ───
         async function saveBookByIndex(index, status) {
             const book = state.searchResults[index];
             if (!book) return;
+
+            let date_started = null;
+            let date_finished = null;
+            const today = new Date().toISOString().split('T')[0];
             
+            if (status === 'reading') date_started = today;
+            if (status === 'read') {
+                date_started = today;
+                date_finished = today;
+            }
+
             try {
-                const response = await fetch('/api/books', {
+                const res = await fetch('/api/books', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -556,336 +2199,457 @@
                         title: book.title,
                         authors: book.authors,
                         cover_url: book.cover_url,
-                        status: status
+                        status: status,
+                        pages: book.pages || null,
+                        date_started: date_started,
+                        date_finished: date_finished
                     })
                 });
 
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.detail || "Failed to save book");
-                }
-                
-                const result = await response.json();
-                showNotification(result.message || "Book added successfully!", "success");
-                
+                if (!res.ok) throw new Error('Failed to save book');
+                const result = await res.json();
+                showNotification(result.message || 'Book added!', 'success');
                 clearSearch();
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification(err.message || "Could not add book. Please try again.", "error");
+                showNotification('Could not add book', 'error');
             }
         }
 
-        // Toggle Book status (Move read <-> to_read)
-        async function toggleBookStatus(id) {
-            const book = state.savedBooks.find(b => b.id === id);
-            if (!book) return;
-
-            const newStatus = book.status === 'to_read' ? 'read' : 'to_read';
-            
-            try {
-                const response = await fetch('/api/books', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: book.id,
-                        title: book.title,
-                        authors: book.authors,
-                        cover_url: book.cover_url,
-                        status: newStatus
-                    })
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.detail || "Failed to toggle status");
-                }
-                
-                const label = newStatus === 'read' ? 'Already Read' : 'Want to Read';
-                showNotification(`Moved "${book.title}" to ${label}!`, "success");
-                
-                await fetchSavedBooks();
-            } catch (err) {
-                console.error(err);
-                showNotification(err.message || "Failed to update status", "error");
-            }
-        }
-
-        // Delete book (DELETE API)
+        // ─── Delete Book ───
         async function deleteBook(id) {
             const book = state.savedBooks.find(b => b.id === id);
-            const title = book ? `"${book.title}"` : 'Book';
-            
-            if (!confirm(`Are you sure you want to remove ${title} from your list?`)) {
-                return;
-            }
+            const title = book ? `"${book.title}"` : 'this book';
+            if (!confirm(`Remove ${title} from your list?`)) return;
 
             try {
-                const response = await fetch(`/api/books/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.detail || "Failed to delete book");
-                }
-                
-                showNotification("Book removed from tracker", "success");
+                const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed to delete');
+                showNotification('Book removed', 'success');
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification(err.message || "Failed to remove book", "error");
+                showNotification('Failed to remove book', 'error');
             }
         }
 
-        // Open edit book modal
+        // ─── Edit Modal ───
         function openEditModal(id) {
             const book = state.savedBooks.find(b => b.id === id);
             if (!book) return;
-            
-            document.getElementById('edit-book-id').value = book.id;
-            document.getElementById('edit-book-status').value = book.status;
-            document.getElementById('edit-title').value = book.title;
-            document.getElementById('edit-authors').value = book.authors.join(', ');
-            document.getElementById('edit-cover').value = book.cover_url || '';
-            
-            const modal = document.getElementById('edit-modal');
-            modal.classList.remove('hidden');
-            // Animate scale in
-            setTimeout(() => {
-                modal.querySelector('.transform').classList.remove('scale-95');
-                modal.querySelector('.transform').classList.add('scale-100');
-            }, 10);
+            $('edit-book-id').value = book.id;
+            $('edit-book-status').value = book.status;
+            $('edit-title').value = book.title;
+            $('edit-authors').value = book.authors.join(', ');
+            $('edit-cover').value = book.cover_url || '';
+            $('edit-pages').value = book.pages || '';
+            $('edit-date-started').value = book.date_started || '';
+            $('edit-date-finished').value = book.date_finished || '';
+            $('edit-modal').classList.add('visible');
         }
 
-        // Close edit book modal
         function closeEditModal() {
-            const modal = document.getElementById('edit-modal');
-            modal.querySelector('.transform').classList.remove('scale-100');
-            modal.querySelector('.transform').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 150);
+            $('edit-modal').classList.remove('visible');
         }
 
-        // Save book details edits
         async function saveEditBook() {
-            const id = document.getElementById('edit-book-id').value;
-            const status = document.getElementById('edit-book-status').value;
-            const titleInput = document.getElementById('edit-title');
-            const authorsInput = document.getElementById('edit-authors');
-            const coverInput = document.getElementById('edit-cover');
+            const id = $('edit-book-id').value;
+            const status = $('edit-book-status').value;
+            const title = $('edit-title').value.trim();
+            if (!title) { showNotification('Title is required', 'error'); return; }
+
+            const authorsRaw = $('edit-authors').value.trim();
+            const authors = authorsRaw ? authorsRaw.split(',').map(a => a.trim()) : [];
+            const cover_url = $('edit-cover').value.trim();
             
-            const title = titleInput.value.trim();
-            if (!title) {
-                showNotification("Book Title is required!", "error");
-                return;
-            }
-            
-            const authorsRaw = authorsInput.value.trim();
-            const authorsList = authorsRaw ? authorsRaw.split(',').map(a => a.trim()) : [];
-            const coverUrl = coverInput.value.trim();
-            
+            const pagesRaw = $('edit-pages').value.trim();
+            const pages = pagesRaw ? parseInt(pagesRaw) : null;
+            const date_started = $('edit-date-started').value || null;
+            const date_finished = $('edit-date-finished').value || null;
+
             try {
-                const response = await fetch('/api/books', {
+                const res = await fetch('/api/books', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, title, authors: authorsList, cover_url: coverUrl, status })
+                    body: JSON.stringify({ id, title, authors, cover_url, status, pages, date_started, date_finished })
                 });
-
-                if (!response.ok) throw new Error("Failed to save book changes");
-                
-                showNotification("Book changes saved successfully!", "success");
+                if (!res.ok) throw new Error('Failed to save');
+                showNotification('Book updated!', 'success');
                 closeEditModal();
                 await fetchSavedBooks();
             } catch (err) {
                 console.error(err);
-                showNotification("Could not save changes.", "error");
+                showNotification('Could not save changes', 'error');
             }
         }
 
-        // Debounced Search Handler
-        function handleSearchInput(e) {
-            const query = e.target.value.trim();
-            
-            if (query.length > 0) {
-                clearSearchBtn.classList.remove('hidden');
-            } else {
-                clearSearchBtn.classList.add('hidden');
-            }
+        // ─── Search (Enter key + button) ───
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (query.length < 1) return;
 
-            clearTimeout(state.debounceTimeout);
+            searchIcon.style.display = 'none';
+            searchSpinner.style.display = 'block';
 
-            if (query.length < 2) {
-                hideDropdown();
-                return;
-            }
-
-            searchIcon.classList.add('hidden');
-            searchSpinner.classList.remove('hidden');
-
-            state.debounceTimeout = setTimeout(async () => {
-                try {
-                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-                    if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        throw new Error(errData.detail || "Search request failed");
-                    }
-                    
-                    const results = await response.json();
-                    renderSearchDropdown(results);
-                } catch (err) {
-                    console.error(err);
-                    showNotification(err.message || "Search failed.", "error");
-                } finally {
-                    searchSpinner.classList.add('hidden');
-                    searchIcon.classList.remove('hidden');
+            try {
+                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (res.status === 401) { window.location.href = '/login'; return; }
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'Search failed');
                 }
-            }, 350);
+                const results = await res.json();
+                renderSearchDropdown(results, query);
+            } catch (err) {
+                console.error(err);
+                showNotification(err.message || 'Search failed', 'error');
+            } finally {
+                searchSpinner.style.display = 'none';
+                searchIcon.style.display = 'block';
+            }
         }
 
-        // Render autocomplete dropdown search list
-        function renderSearchDropdown(results) {
+        function renderSearchDropdown(results, query) {
             searchDropdown.innerHTML = '';
-            state.searchResults = results; // cache results in state
-            
+            state.searchResults = results;
+
             if (results.length === 0) {
                 searchDropdown.innerHTML = `
-                    <div class="px-5 py-4 text-center text-slate-500 text-xs font-medium">
-                        No results found for that search.
+                    <div class="dropdown-header">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Results for: <span class="query-text">"${esc(query)}"</span>
+                    </div>
+                    <div class="no-results">
+                        <div class="no-results-icon">📚</div>
+                        <h4>No books found</h4>
+                        <p>Try checking your spelling or using different keywords.</p>
                     </div>
                 `;
-                showDropdown();
+                searchDropdown.classList.add('visible');
                 return;
             }
 
-            results.forEach((book, index) => {
-                const item = document.createElement('div');
-                // Stack vertically on mobile, row on larger devices
-                item.className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 hover:bg-slate-800/50 transition-colors duration-150 group";
-                
-                const coverImage = book.cover_url 
-                    ? `<img src="${escapeHtml(book.cover_url)}" alt="${escapeHtml(book.title)} thumbnail" class="w-10 h-14 object-cover rounded shadow bg-slate-800 flex-shrink-0">`
-                    : `<div class="w-10 h-14 rounded bg-slate-800 border border-slate-700 flex flex-col items-center justify-center text-slate-500 text-[10px] flex-shrink-0"><i class="fa-solid fa-book"></i></div>`;
+            let html = `
+                <div class="dropdown-header">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Results for: <span class="query-text">"${esc(query)}"</span>
+                    &nbsp;·&nbsp; ${results.length} found
+                </div>
+            `;
+
+            results.forEach((book, i) => {
+                const cover = book.cover_url
+                    ? `<img src="${esc(book.cover_url)}" alt="" class="dropdown-cover" loading="lazy">`
+                    : `<div class="dropdown-cover-placeholder"><i class="fa-solid fa-book"></i></div>`;
 
                 const authors = book.authors && book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author';
-                
-                item.innerHTML = `
-                    <div class="flex items-center gap-3 min-w-0">
-                        ${coverImage}
-                        <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-slate-200 truncate group-hover:text-brand-300 transition-colors pr-2" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</h4>
-                            <p class="text-[11px] text-slate-400 truncate mt-0.5" title="${escapeHtml(authors)}">${escapeHtml(authors)}</p>
+
+                let meta = '';
+                if (book.first_publish_year) meta += `<span>${book.first_publish_year}</span>`;
+                if (book.pages) meta += `<span>${book.pages} pages</span>`;
+                if (book.rating) meta += `<span>⭐ ${book.rating}</span>`;
+
+                html += `
+                    <div class="dropdown-item">
+                        <div class="dropdown-item-info">
+                            ${cover}
+                            <div class="dropdown-text">
+                                <div class="dropdown-title" title="${esc(book.title)}">${esc(book.title)}</div>
+                                <div class="dropdown-authors">${esc(authors)}</div>
+                                ${meta ? `<div class="dropdown-meta">${meta}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="dropdown-actions">
+                            <button class="btn-add-toread" onclick="saveBookByIndex(${i},'to_read')"><i class="fa-solid fa-bookmark"></i> Wishlist</button>
+                            <button class="btn-add-reading" onclick="saveBookByIndex(${i},'reading')"><i class="fa-solid fa-book-open-reader"></i> Reading</button>
+                            <button class="btn-add-read" onclick="saveBookByIndex(${i},'read')"><i class="fa-solid fa-circle-check"></i> Read</button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 sm:gap-1.5 justify-end mt-1 sm:mt-0 flex-shrink-0">
-                        <button 
-                            onclick="saveBookByIndex(${index}, 'to_read')"
-                            class="flex-1 sm:flex-none py-2 px-3 sm:py-1.5 sm:px-2.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-[11px] font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1 shadow-md shadow-brand-900/10 active:scale-95"
-                        >
-                            <span>🎯</span> Wishlist
-                        </button>
-                        <button 
-                            onclick="saveBookByIndex(${index}, 'read')"
-                            class="flex-1 sm:flex-none py-2 px-3 sm:py-1.5 sm:px-2.5 bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white text-[11px] font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1 shadow-md shadow-cyan-900/10 active:scale-95"
-                        >
-                            <span>✅</span> Read
-                        </button>
-                    </div>
                 `;
-                searchDropdown.appendChild(item);
             });
 
-            showDropdown();
+            searchDropdown.innerHTML = html;
+            searchDropdown.classList.add('visible');
         }
 
-        // Show/hide dropdown animations
-        function showDropdown() {
-            searchDropdown.classList.remove('hidden');
-        }
-
-        function hideDropdown() {
-            setTimeout(() => {
-                searchDropdown.classList.add('hidden');
-            }, 250); // slight delay to allow buttons clicks to trigger
-        }
-
-        // Clear search inputs and results
         function clearSearch() {
             searchInput.value = '';
-            clearSearchBtn.classList.add('hidden');
+            clearSearchBtn.style.display = 'none';
             searchDropdown.innerHTML = '';
-            searchDropdown.classList.add('hidden');
-            searchSpinner.classList.add('hidden');
-            searchIcon.classList.remove('hidden');
+            searchDropdown.classList.remove('visible');
+            searchSpinner.style.display = 'none';
+            searchIcon.style.display = 'block';
         }
 
-        // Toggle visibility of the manual book entry form
+        // ─── Manual Book Form ───
         function toggleManualForm() {
-            const form = document.getElementById('manual-book-form');
-            form.classList.toggle('hidden');
-            if (!form.classList.contains('hidden')) {
-                // Focus title input when opened
-                setTimeout(() => document.getElementById('manual-title').focus(), 100);
+            const form = $('manual-form');
+            form.classList.toggle('visible');
+            if (form.classList.contains('visible')) {
+                setTimeout(() => $('manual-title').focus(), 100);
             }
         }
 
-        // Submit manual book creation
         async function submitManualBook(status) {
-            const titleInput = document.getElementById('manual-title');
-            const authorsInput = document.getElementById('manual-authors');
-            const coverInput = document.getElementById('manual-cover');
+            const title = $('manual-title').value.trim();
+            if (!title) { showNotification('Title is required', 'error'); return; }
+
+            const authorsRaw = $('manual-authors').value.trim();
+            const authors = authorsRaw ? authorsRaw.split(',').map(a => a.trim()) : [];
+            const cover_url = $('manual-cover').value.trim();
+            const id = 'custom-' + Date.now();
+
+            let date_started = null;
+            let date_finished = null;
+            const today = new Date().toISOString().split('T')[0];
             
-            const title = titleInput.value.trim();
-            if (!title) {
-                showNotification("Book Title is required!", "error");
+            if (status === 'reading') date_started = today;
+            if (status === 'read') {
+                date_started = today;
+                date_finished = today;
+            }
+
+            try {
+                const res = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, title, authors, cover_url, status, date_started, date_finished })
+                });
+                if (!res.ok) throw new Error('Failed to add book');
+                showNotification('Book added!', 'success');
+                $('manual-title').value = '';
+                $('manual-authors').value = '';
+                $('manual-cover').value = '';
+                $('manual-form').classList.remove('visible');
+                await fetchSavedBooks();
+            } catch (err) {
+                console.error(err);
+                showNotification('Could not add book', 'error');
+            }
+        }
+
+        // ─── User Management (Admin) ───
+        async function openUserManagement() {
+            closeAdminMenu();
+            $('user-modal').classList.add('visible');
+            await loadUsers();
+        }
+
+        function closeUserModal() {
+            $('user-modal').classList.remove('visible');
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                if (!res.ok) throw new Error('Failed to load users');
+                const users = await res.json();
+
+                const list = $('user-list');
+                list.innerHTML = users.map(u => `
+                    <div class="user-list-item">
+                        <div class="user-list-info">
+                            <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+                            <span>${esc(u.username)}</span>
+                            ${u.is_admin ? '<span class="user-badge">Admin</span>' : ''}
+                        </div>
+                        ${!u.is_admin ? `<button class="user-delete-btn" onclick="removeUser(${u.id})" title="Delete user"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                showNotification('Failed to load users', 'error');
+            }
+        }
+
+        async function addNewUser() {
+            const username = $('new-username').value.trim();
+            const password = $('new-password').value;
+
+            if (!username || username.length < 3) {
+                showNotification('Username must be at least 3 characters', 'error');
                 return;
             }
-            
-            const authorsRaw = authorsInput.value.trim();
-            const authorsList = authorsRaw ? authorsRaw.split(',').map(a => a.trim()) : [];
-            const coverUrl = coverInput.value.trim();
-            
-            // Generate a unique custom book ID to prevent conflicts with Google Book IDs
-            const customId = 'custom-' + Date.now();
-            
-            await saveBook(customId, title, JSON.stringify(authorsList), coverUrl, status);
-            
-            // Clear inputs and hide form
-            titleInput.value = '';
-            authorsInput.value = '';
-            coverInput.value = '';
-            document.getElementById('manual-book-form').classList.add('hidden');
+            if (!password || password.length < 4) {
+                showNotification('Password must be at least 4 characters', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to create user');
+                }
+                showNotification(`User "${username}" created!`, 'success');
+                $('new-username').value = '';
+                $('new-password').value = '';
+                await loadUsers();
+            } catch (err) {
+                showNotification(err.message, 'error');
+            }
         }
 
-        // Setup Event Listeners
+        async function removeUser(userId) {
+            if (!confirm('Delete this user and all their books?')) return;
+            try {
+                const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed to delete user');
+                showNotification('User deleted', 'success');
+                await loadUsers();
+            } catch (err) {
+                showNotification('Failed to delete user', 'error');
+            }
+        }
+
+        // ─── Admin Menu Toggle ───
+        function closeAdminMenu() {
+            $('admin-menu').classList.remove('visible');
+        }
+
+        // ─── Keep-Alive Ping (Randomized 8-13 min) ───
+        function scheduleKeepAlive() {
+            const minMs = 8 * 60 * 1000;   // 8 minutes
+            const maxMs = 13 * 60 * 1000;  // 13 minutes
+            const delay = Math.floor(Math.random() * (maxMs - minMs)) + minMs;
+
+            setTimeout(async () => {
+                try {
+                    await fetch('/api/health');
+                } catch (e) {
+                    // Silently ignore — it's just a keep-alive
+                }
+                scheduleKeepAlive(); // Schedule next ping with a new random delay
+            }, delay);
+        }
+
+        // ─── Event Listeners ───
         function setupEventListeners() {
-            searchInput.addEventListener('input', handleSearchInput);
-            
-            // Hide dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
-                    searchDropdown.classList.add('hidden');
+            // Search on Enter key
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
                 }
             });
 
-            // Focus input shows dropdown if it has items
+            // Search button click
+            searchBtn.addEventListener('click', performSearch);
+
+            // Show/hide clear button
+            searchInput.addEventListener('input', () => {
+                clearSearchBtn.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+            });
+
+            // Clear button
+            clearSearchBtn.addEventListener('click', clearSearch);
+
+            // Click outside closes dropdown
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target) && !searchBtn.contains(e.target)) {
+                    searchDropdown.classList.remove('visible');
+                }
+                // Close admin menu
+                if (!e.target.closest('.admin-dropdown')) {
+                    closeAdminMenu();
+                }
+            });
+
+            // Re-show dropdown on focus if has content
             searchInput.addEventListener('focus', () => {
                 if (searchDropdown.children.length > 0) {
-                    showDropdown();
+                    searchDropdown.classList.add('visible');
                 }
             });
 
-            clearSearchBtn.addEventListener('click', clearSearch);
-            
-            // Responsive mobile tabs sync on window resize
-            window.addEventListener('resize', syncMobileTabVisibility);
+            // Admin menu toggle
+            $('menu-toggle-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                $('admin-menu').classList.toggle('visible');
+            });
+
+            // Drag and Drop Zones
+            ['to_read', 'reading', 'read'].forEach(status => {
+                const statusId = status === 'to_read' ? 'to-read' : status;
+                const col = $('list-' + statusId);
+                
+                col.addEventListener('dragover', e => {
+                    e.preventDefault(); // allow drop
+                    col.classList.add('drag-over');
+                });
+                
+                col.addEventListener('dragleave', e => {
+                    col.classList.remove('drag-over');
+                });
+                
+                col.addEventListener('drop', e => {
+                    e.preventDefault();
+                    col.classList.remove('drag-over');
+                    const bookId = e.dataTransfer.getData('text/plain');
+                    if (bookId) {
+                        changeStatus(bookId, status);
+                    }
+                });
+            });
+
+            // Responsive mobile tabs
+            window.addEventListener('resize', syncMobileView);
+
+            // Close modals on escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeEditModal();
+                    closeUserModal();
+                    closeShelfView();
+                }
+            });
+
+            // Close shelf modal on click outside
+            $('shelf-modal').addEventListener('click', (e) => {
+                if (e.target === $('shelf-modal')) {
+                    closeShelfView();
+                }
+            });
         }
 
-        // App Entry Point
+        // ─── Shelf View Overlay ───
+        function openShelfView(status, title) {
+            const books = state.savedBooks.filter(b => b.status === status);
+            $('shelf-modal-title').innerHTML = `<i class="fa-solid fa-book-bookmark"></i> ${title}`;
+            
+            let html = '';
+            if (books.length === 0) {
+                html = `<div style="color:var(--ink-muted); grid-column: 1 / -1; margin-top:2rem;">No books on this shelf yet.</div>`;
+            } else {
+                books.forEach(book => {
+                    const cover = book.cover_url 
+                        ? `<img src="${book.cover_url}" alt="Cover">`
+                        : `<div class="book-cover-placeholder"><i class="fa-solid fa-book"></i><span>No Cover</span></div>`;
+                    
+                    html += `<div class="shelf-book" title="${esc(book.title)}\n${esc(book.authors || '')}">${cover}</div>`;
+                });
+            }
+            
+            $('shelf-grid').innerHTML = html;
+            $('shelf-modal').classList.add('visible');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeShelfView() {
+            $('shelf-modal').classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+
+        // ─── App Entry Point ───
         window.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
             fetchSavedBooks();
+            scheduleKeepAlive(); // Start randomized keep-alive pings
         });
     </script>
 </body>

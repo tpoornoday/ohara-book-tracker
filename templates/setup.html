@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohara — Welcome to Your Library</title>
+    <meta name="description" content="Set up your Ohara book tracker">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' rx='140' fill='%23D1966C'/%3E%3Cpath fill='%2312100E' transform='translate(76 44)' d='M0 96C0 43 43 0 96 0l96 0 0 190.7c0 13.4 15.5 20.9 26 12.5L272 160l54 43.2c10.5 8.4 26 .9 26-12.5L352 0l32 0 32 0c17.7 0 32 14.3 32 32l0 320c0 17.7-14.3 32-32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l-32 0L96 512c-53 0-96-43-96-96L0 96zM64 416c0 17.7 14.3 32 32 32l256 0 0-64L96 384c-17.7 0-32 14.3-32 32z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --parchment: #1A1715;
+            --parchment-dark: #12100E;
+            --leather: #B87A4F;
+            --leather-light: #D1966C;
+            --leather-dark: #8A5531;
+            --ink: #E8E2D9;
+            --ink-muted: #B0A89F;
+            --gold-leaf: #D9B859;
+            --gold-leaf-light: #EAD07C;
+            --shelf-shadow: rgba(0, 0, 0, 0.4);
+            --page-cream: #24201D;
+            --bookmark-red: #D47766;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background-color: var(--parchment);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #1A1715 0%, #261D17 50%, #12100E 100%);
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            z-index: 0;
+        }
+
+        .bg-artifacts {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .bg-artifacts i {
+            position: absolute;
+            color: rgba(184, 122, 79, 0.05);
+            font-size: 8rem;
+            transform: rotate(-15deg);
+        }
+        .bg-artifacts i:nth-child(even) { transform: rotate(20deg); }
+        .bg-artifacts i:nth-child(3) { transform: rotate(5deg) scale(0.8); }
+        .bg-artifacts i:nth-child(4) { transform: rotate(-25deg) scale(1.2); }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            gap: 0;
+            padding: 1.5rem;
+        }
+
+        /* Left panel: decorative bookshelf image */
+        .login-illustration {
+            flex: 1;
+            background-image: url('/static/images/cozy_bookshelf.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 1.25rem 0 0 1.25rem;
+            position: relative;
+            min-height: 480px;
+        }
+
+        /* Right panel: setup form */
+        .login-card {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(209, 150, 108, 0.05) 0%, #12100E 100%);
+            border-radius: 0 1.25rem 1.25rem 0;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid rgba(209, 150, 108, 0.1);
+            border-left: none;
+        }
+
+        .logo-section {
+            margin-bottom: 2rem;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: #D1966C;
+            border-radius: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #12100E;
+            font-size: 1.15rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .logo-title {
+            font-family: 'Libre Baskerville', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .welcome-text {
+            font-family: 'Libre Baskerville', serif;
+            font-size: 1.05rem;
+            color: var(--ink);
+            margin-bottom: 0.25rem;
+        }
+
+        .welcome-sub {
+            font-size: 0.82rem;
+            color: var(--ink-muted);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--ink-muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input-wrapper {
+            position: relative;
+        }
+
+        .form-input-wrapper i {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-muted);
+            opacity: 0.4;
+            font-size: 0.85rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1.5px solid rgba(255,255,255,0.05);
+            border-radius: 0.5rem;
+            background: transparent;
+            color: var(--ink);
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #D1966C;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: #D1966C;
+            color: #12100E;
+            border: none;
+            border-radius: 0.75rem;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.75rem;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 0 12px rgba(209, 150, 108, 0.25);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 20px rgba(209, 150, 108, 0.45);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            background: rgba(212, 102, 85, 0.15);
+            border: 1px solid rgba(212, 102, 85, 0.3);
+            color: #D46655;
+            padding: 0.65rem 1rem;
+            border-radius: 0.6rem;
+            font-size: 0.8rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.68rem;
+            color: var(--ink-muted);
+            opacity: 0.5;
+        }
+
+        @media (max-width: 700px) {
+            .login-wrapper {
+                flex-direction: column;
+                max-width: 420px;
+            }
+
+            .login-illustration {
+                border-radius: 1.25rem 1.25rem 0 0;
+                min-height: 200px;
+            }
+
+            .login-card {
+                background: linear-gradient(180deg, rgba(209, 150, 108, 0.05) 0%, #12100E 100%);
+                border-radius: 0 0 1.25rem 1.25rem;
+                padding: 2rem 1.5rem;
+                border: 1px solid rgba(209, 150, 108, 0.1);
+                border-top: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-artifacts">
+        <i class="fa-solid fa-feather" style="top: 15%; left: 8%;"></i>
+        <i class="fa-solid fa-mug-hot" style="bottom: 20%; right: 10%;"></i>
+        <i class="fa-solid fa-glasses" style="top: 30%; right: 15%;"></i>
+        <i class="fa-solid fa-book-open" style="bottom: 15%; left: 12%;"></i>
+    </div>
+    <div class="login-wrapper">
+        <!-- Left: Decorative bookshelf image -->
+        <div class="login-illustration">
+        </div>
+
+        <!-- Right: Setup form -->
+        <div class="login-card">
+            <div class="logo-section">
+                <div class="logo-row">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <h1 class="logo-title">Ohara</h1>
+                </div>
+                <h2 class="welcome-text">Create Your Library</h2>
+                <p class="welcome-sub">Set up your admin account to get started.</p>
+            </div>
+
+            {% if error %}
+            <div class="error-msg">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/setup" autocomplete="off">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-regular fa-user"></i>
+                        <input class="form-input" type="text" id="username" name="username" placeholder="Choose a username" required minlength="3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input class="form-input" type="password" id="password" name="password" placeholder="Create a password" required minlength="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-check-double"></i>
+                        <input class="form-input" type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                    </div>
+                </div>
+                <button class="submit-btn" type="submit">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Create Library
+                </button>
+            </form>
+
+            <p class="footer-text">Ohara &bull; Your personal book sanctuary</p>
+        </div>
+    </div>
+</body>
+</html>
