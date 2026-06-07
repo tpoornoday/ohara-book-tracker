@@ -950,22 +950,24 @@
 
         .book-title {
             font-family: var(--font-heading);
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 700;
             color: var(--ink);
-            white-space: nowrap;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
             line-height: 1.3;
         }
 
         .book-authors {
             font-size: 0.8rem;
             color: var(--ink-muted);
-            white-space: nowrap;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 0.1rem;
+            margin-top: 0.15rem;
         }
 
         .book-actions {
@@ -1419,7 +1421,7 @@
             .book-card { padding: 0.65rem; gap: 0.65rem; }
             .book-cover, .book-cover-placeholder { width: 56px; height: 84px; }
             .book-info { height: 84px; }
-            .book-title { font-size: 0.85rem; }
+            .book-title { font-size: 0.78rem; }
             .book-authors { font-size: 0.75rem; }
             .action-btn, .status-icon-btn { width: 26px; height: 26px; font-size: 0.65rem; }
             
